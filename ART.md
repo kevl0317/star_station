@@ -1,5 +1,17 @@
 # 2026-09-17 生成美术资源
 
+## 星小兔白兔立绘
+
+首页和首次结算知识讲解共用 `assets/solar-art-v1/bunny-white-moon.png`（1145 × 1374，透明 PNG）。内置 image_gen 根据用户参考图卡通化，随后按反馈改为白兔、缩小脚掌、调整脸型，最终把圆形吊坠改为金色月牙。保留红色飘带和挥手姿势；旧立绘保留。图鉴不添加角色。
+
+最终编辑提示：Replace ONLY the round gold medallion with a small warm golden crescent moon pendant, no circular backing. Preserve white fur, face, pink cheeks, ears, small feet, waving pose, red flowing ribbon, proportions, hand-painted texture and transparent alpha background.
+
+## 绘本风背景更新
+
+当前背景为 `assets/galaxy-pastel.png`（1672 × 941），使用内置 image_gen 生成。参考用户提供的三张图片的蜡笔、油画棒纸张纹理及蓝黄配色，重新构图为横向星空：左下行星地平线与小型观测站、右上月牙，中间保留暗蓝留白供游戏内容显示。无文字、水印或内嵌角色。旧版 `galaxy.png` / `galaxy.webp` 保留。生成原图：`C:/Users/24510/.codex/generated_images/01a09c8f-e3f8-7241-a555-33359dd191c5/exec-457321ba-c72f-426c-b9cb-2a53f3182b89.png`。
+
+提示词要点：Wide 16:9 storybook game background; wax crayon and oil pastel grain on paper, loose gouache strokes, chalky pale yellow and rich cobalt blue, quiet magical bedtime mood. Blue planetary horizon and tiny observatory at lower left, pale yellow crescent at upper-right edge, sparse handmade stars. Central 70% calm dark indigo negative space. No photorealism, glossy 3D, UI, lettering, watermark, or rabbit baked into the background.
+
 使用内置 image_gen 生成，透明 PNG 原图和保留 alpha 的 640 像素 WebP 运行资源位于 `assets/solar-art-v1/`。未进行重绘或抠图，运行图仅等比缩放、格式压缩。完整逐图提示词及生成源文件路径见该目录 `manifest.json`。
 
 已生成并接入全部 13 张：太阳、水星、金星、地球、月球、火星、木星、土星、天王星、海王星、主小行星带、柯伊伯带、星小兔。用于首页、太阳系星图、关前观测图、修复图和知识卡。星小兔为兔耳机器人，白色陶瓷外壳、青色表情屏和云纹。天体为游戏插画示意，不按真实大小、距离比例绘制。

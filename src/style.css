@@ -56,7 +56,7 @@ button:hover:not(:disabled) {
 .space-backdrop {
   position: absolute;
   inset: -2%;
-  background: #071625 url("../assets/galaxy.webp") center center/cover no-repeat;
+  background: #142e59 url("../assets/galaxy-pastel.png") center center/cover no-repeat;
   z-index: -4;
   transition:
     filter 1s,

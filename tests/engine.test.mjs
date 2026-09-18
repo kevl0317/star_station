@@ -13,6 +13,39 @@ import {
   towerProgress,
 } from "../src/engine.mjs";
 import { positionOf, receiverEdge, receiverCurve } from "../src/renderer.mjs";
+test("每关首次结束记录知识卡展示，失败、重玩与刷新均不重复", () => {
+  const initial = emptySave();
+  assert.deepEqual(initial.shownCards, []);
+  const failed = recordResult(initial, play(LEVELS[0], () => false));
+  assert.deepEqual(initial.shownCards, []);
+  assert.deepEqual(failed.shownCards, [1]);
+  assert.deepEqual(failed.cards, []);
+  const replayed = recordResult(readSave(JSON.stringify(failed)), play(LEVELS[0]));
+  assert.deepEqual(replayed.shownCards, [1]);
+  assert.deepEqual(replayed.cards, [1]);
+  const next = recordResult(replayed, play(LEVELS[1]));
+  assert.deepEqual(readSave(JSON.stringify(next)).shownCards, [1, 2]);
+});
+test("未结束不记录知识卡展示，历史截断后展示标记仍保留", () => {
+  let save = emptySave();
+  const playing = new Session(LEVELS[0], 32);
+  playing.start();
+  assert.deepEqual(recordResult(save, playing).shownCards, []);
+  save = recordResult(save, play(LEVELS[0], () => false));
+  const second = play(LEVELS[1], () => false);
+  for (let i = 0; i < 101; i++) save = recordResult(save, second);
+  assert.equal(save.history.length, 100);
+  assert.ok(save.history.every((r) => r.level === 2));
+  assert.deepEqual(readSave(JSON.stringify(save)).shownCards, [1, 2]);
+});
+test("旧存档已结束关卡迁移展示标记，并过滤非法知识卡编号", () => {
+  const old = recordResult(emptySave(), play(LEVELS[1], () => false));
+  delete old.shownCards;
+  old.stars = { 1: 3 };
+  assert.deepEqual(readSave(JSON.stringify(old)).shownCards, [1, 2]);
+  old.shownCards = [3, 3, 0, 26, "4", null, 2.5];
+  assert.deepEqual(readSave(JSON.stringify(old)).shownCards, [1, 2, 3]);
+});
 function play(level, behavior = (s) => s.target, seed = 32) {
   const s = new Session(level, seed);
   s.start();

@@ -84,7 +84,6 @@ function clearSignals() {
 function show(which) {
   screen = which;
   world.screen = which;
-  $("game-root").classList.remove("skip-effects");
   $("game-root").dataset.screen = which;
   for (const [k, id] of Object.entries(screens)) $(id).hidden = k !== which;
   const chapter = LEVELS[selected - 1].chapter;
@@ -121,7 +120,7 @@ function solarChart() {
       done = levels.filter((l) => save.stars[l.id]).length;
     return `<button class="solar-body ${done ? "lit" : ""} ${extra}" data-action="body" data-body="${id}" aria-label="${b.name} ${b.type}，${done}/${levels.length}节点已接通">${planetSVG(id)}<span>${b.name}</span><small>${b.type}</small></button>`;
   };
-  return `<div class="solar-system"><div class="sun-column">${bodyButton("sun")}</div><div class="planet-track">${PLANETS.map((id, i) => `<div class="planet-stop"><span class="planet-index">${i + 1}</span>${bodyButton(id)}${id === "earth" ? `<div class="moon-inset"><span>地月放大</span>${bodyButton("moon")}</div>` : ""}</div>`).join("")}</div></div>`;
+  return `<div class="solar-system"><div class="sun-column">${bodyButton("sun")}</div><div class="planet-track">${PLANETS.map((id) => `<div class="planet-stop">${bodyButton(id)}${id === "earth" ? `<div class="moon-inset">${bodyButton("moon")}</div>` : ""}</div>`).join("")}</div></div>`;
 }
 function bodyDetail(id) {
   const b = bodyInfo(id),
@@ -457,6 +456,7 @@ function finish() {
   $("countdown").hidden = true;
   const r = session.result(),
     l = session.level;
+  const showCard = !save.shownCards.includes(l.id);
   save = recordResult(save, session);
   persist();
   show("result");
@@ -475,9 +475,9 @@ function finish() {
       ]
         .filter(Boolean)
         .join(" · ");
-  $("result-card").innerHTML = r.passed
-    ? cardHTML(l.id)
-    : `<div class="locked-knowledge">${planetSVG(l.body)}<span>K${String(l.id).padStart(2, "0")} · 达标后收藏知识卡</span></div>`;
+  $("result-card").hidden = !showCard;
+  $("result-card").innerHTML = showCard ? cardHTML(l.id, { narrated: true }) : "";
+  document.querySelector(".result-content").classList.toggle("without-card", !showCard);
   $("result-score").textContent = r.clarity ?? 0;
   $("score-ring").style.strokeDashoffset = 490 * (1 - (r.clarity ?? 0) / 100);
   $("result-hit").textContent = pct(r.hitRate);
@@ -643,10 +643,6 @@ function routeAction(action, button) {
     case "chapter-card":
       modal("观测知识", cardHTML(selected), "card");
       break;
-    case "skip-animation":
-      $("game-root").classList.add("skip-effects");
-      world.fx = [];
-      break;
     case "rules":
       pause();
       modal(
@@ -714,7 +710,6 @@ $("continue").addEventListener("click", () => {
   audio.play("click");
   briefing(unlocked(save));
 });
-$("open-map").addEventListener("click", map);
 $("brand-home").addEventListener("click", home);
 $("records").addEventListener("click", records);
 $("ready").addEventListener("click", start);

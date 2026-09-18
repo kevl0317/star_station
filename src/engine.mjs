@@ -264,6 +264,7 @@ export function emptySave() {
     ruleVersion: 4,
     stars: {},
     cards: [],
+    shownCards: [],
     history: [],
     practiced: [],
     muted: false,
@@ -302,6 +303,15 @@ export function readSave(raw) {
           )
           .slice(-100)
       : [];
+    clean.shownCards = [
+      ...new Set(
+        [
+          ...(Array.isArray(d.shownCards) ? d.shownCards : []),
+          ...clean.cards,
+          ...clean.history.map((r) => r.level),
+        ].filter((id) => Number.isInteger(id) && id >= 1 && id <= 25),
+      ),
+    ].sort((a, b) => a - b);
     return clean;
   } catch {
     return clean;
@@ -318,6 +328,7 @@ export function recordResult(save, session) {
   if (session.state !== "finished") return save;
   const r = session.result(),
     next = structuredClone(save);
+  next.shownCards = [...new Set([...(next.shownCards ?? []), session.level.id])].sort((a, b) => a - b);
   if (r.passed) {
     next.stars[session.level.id] = Math.max(next.stars[session.level.id] ?? 0, r.stars);
     next.cards = [...new Set([...(next.cards ?? []), session.level.id])].sort((a, b) => a - b);
