@@ -1,0 +1,5 @@
+{
+  "source": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-f871e98c-2eac-4a78-8db8-d92c9f423fd0.png",
+  "prompt": "Use case: precise-object-edit. Edit target: provided Neptune game sprite. Remove the entire planetary ring, including the portions outside the globe and the dark diagonal band crossing in front of the globe. Seamlessly reconstruct the blue atmosphere and white cloud streaks where the ring crossed. Keep the planet's original size, position, spherical silhouette, cobalt blue colors, cloud patterns elsewhere, upper-left lighting, and painterly dimensional style unchanged. Preserve genuine transparent alpha background. Only the single planet remains, with absolutely no rings, orbit lines, added objects, text, scenery or watermark.",
+  "tool": "built-in image_gen"
+}

@@ -1,0 +1,11 @@
+node_modules/
+.npm-cache/
+tmp/
+docs/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+assets/solar-art-v1/completed-paths.json

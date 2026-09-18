@@ -1,0 +1,856 @@
+import { isHidden } from "./engine.mjs";
+import { CHAPTERS, LEVELS, COLORS, ruleText, examples, mismatch } from "./levels.mjs";
+import {
+  BODIES,
+  PLANETS,
+  CARDS,
+  bodyInfo,
+  planetSVG,
+  cardHTML,
+  galaxySVG,
+  bunnySVG,
+} from "./astronomy.mjs";
+import { Session, SAVE_KEY, readSave, unlocked, towerProgress, recordResult } from "./engine.mjs";
+import { icon, signalSVG, signalName, towerSVG } from "./art.mjs";
+import { WorldRenderer, positionOf } from "./renderer.mjs";
+import { GameAudio } from "./audio.mjs";
+const $ = (id) => document.getElementById(id),
+  esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+    );
+const storageKey = SAVE_KEY + (new URLSearchParams(location.search).has("test") ? "-test" : "");
+let raw = null;
+try {
+  raw = localStorage.getItem(storageKey);
+} catch {
+  $("storage-note").hidden = false;
+}
+let save = readSave(raw),
+  selected = unlocked(save),
+  screen = "home",
+  session = null,
+  countdown = null,
+  practice = null,
+  modalMode = null,
+  last = 0,
+  feedbackUntil = 0,
+  toastUntil = 0;
+let lastRenderSecond = -1,
+  celebrated = false;
+const reducedOS = matchMedia("(prefers-reduced-motion:reduce)").matches;
+const nodes = new Map(),
+  audio = new GameAudio(),
+  world = new WorldRenderer($("world-fx"));
+const screens = {
+  home: "home-screen",
+  map: "map-screen",
+  briefing: "briefing-screen",
+  game: "play-screen",
+  result: "result-screen",
+  chapter: "chapter-screen",
+  atlas: "atlas-screen",
+};
+const pct = (n) => (n === null ? "—" : `${(n * 100).toFixed(1)}%`);
+function persist() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(save));
+  } catch {
+    $("storage-note").hidden = false;
+  }
+}
+function toast(text) {
+  $("toast").textContent = text;
+  $("toast").classList.add("visible");
+  toastUntil = performance.now() + 2300;
+}
+function preferences() {
+  audio.mute(save.muted);
+  world.reduced = reducedOS;
+  $("game-root").classList.toggle("reduced", world.reduced);
+  $("sound").innerHTML = icon(save.muted ? "muted" : "sound");
+  $("sound").setAttribute("aria-label", save.muted ? "开启声音" : "关闭声音");
+  $("sound").title = save.muted ? "开启声音" : "关闭声音";
+}
+function clearSignals() {
+  for (const n of nodes.values()) {
+    n.el.remove();
+    n.dust?.remove();
+  }
+  nodes.clear();
+  world.fx = [];
+}
+function show(which) {
+  screen = which;
+  world.screen = which;
+  $("game-root").classList.remove("skip-effects");
+  $("game-root").dataset.screen = which;
+  for (const [k, id] of Object.entries(screens)) $(id).hidden = k !== which;
+  const chapter = LEVELS[selected - 1].chapter;
+  $("game-root").style.setProperty("--chapter", CHAPTERS[chapter].color);
+  $("star-total").innerHTML =
+    `★ ${Object.values(save.stars).reduce((a, b) => a + b, 0)} <small>/ 75</small>`;
+}
+function levelButton(l) {
+  const locked = l.id > unlocked(save);
+  return `<button class="mini-level ${save.stars[l.id] ? "passed" : ""}" data-action="level" data-level="${l.id}" ${locked ? "disabled" : ""} aria-label="第${l.id}关 ${bodyInfo(l.body).name} ${l.name}${locked ? "，未解锁" : ""}">${l.id}</button>`;
+}
+function chapterRoutes() {
+  const open = unlocked(save);
+  return `<div class="mission-routes">${CHAPTERS.map((c, i) => {
+    const levels = LEVELS.filter((l) => l.chapter === i);
+    const done = levels.filter((l) => save.stars[l.id]).length;
+    const active = levels.some((l) => l.id === open);
+    return `<section class="mission-route ${active ? "route-active" : ""} ${done === 5 ? "route-complete" : ""}" style="--route-color:${c.color}" aria-label="${c.name}"><div class="route-heading"><span class="route-index">0${i + 1}</span><h3>${c.name}</h3><small>${done}/5</small></div><div class="route-stops">${levels
+      .map((l) => {
+        const stars = save.stars[l.id] || 0;
+        const locked = l.id > open;
+        return `<button class="route-stop ${stars ? "passed" : ""} ${l.id === open ? "current" : ""} ${l.checkpoint ? "checkpoint" : ""}" data-action="level" data-level="${l.id}" ${locked ? "disabled" : ""} ${l.id === open ? 'aria-current="step"' : ""} title="${l.name}" aria-label="第${l.id}关 ${l.name}${locked ? "，未解锁" : stars ? `，${stars}星` : "，当前关卡"}"><span class="stop-number">${String(l.id).padStart(2, "0")}</span><span class="stop-rating" aria-hidden="true">${stars ? "★".repeat(stars) : locked ? "·" : "◆"}</span></button>`;
+      })
+      .join("")}</div></section>`;
+  }).join("")}</div>`;
+}
+function levelsForBody(id) {
+  return LEVELS.filter((l) => l.body === id || (id === "earth" && l.body === "earthmoon"));
+}
+function solarChart() {
+  const bodyButton = (id, extra = "") => {
+    const b = bodyInfo(id),
+      levels = levelsForBody(id),
+      done = levels.filter((l) => save.stars[l.id]).length;
+    return `<button class="solar-body ${done ? "lit" : ""} ${extra}" data-action="body" data-body="${id}" aria-label="${b.name} ${b.type}，${done}/${levels.length}节点已接通">${planetSVG(id)}<span>${b.name}</span><small>${b.type}</small></button>`;
+  };
+  return `<div class="solar-system"><div class="sun-column">${bodyButton("sun")}</div><div class="planet-track">${PLANETS.map((id, i) => `<div class="planet-stop"><span class="planet-index">${i + 1}</span>${bodyButton(id)}${id === "earth" ? `<div class="moon-inset"><span>地月放大</span>${bodyButton("moon")}</div>` : ""}</div>`).join("")}</div></div>`;
+}
+function bodyDetail(id) {
+  const b = bodyInfo(id),
+    levels = levelsForBody(id);
+  modal(
+    b.name,
+    `<div class="body-detail-art">${planetSVG(id)}</div><p>${b.type}</p><div class="body-levels">${levels.map((l) => `<div>${levelButton(l)}<span>第 ${l.id} 关 · ${l.name}</span></div>`).join("")}</div><button class="action-button outline" data-action="atlas" data-body="${id}">查看知识卡</button>`,
+    "body",
+  );
+}
+function atlas(filter = "all") {
+  if (screen === "game") pause();
+  closeModal();
+  audio.stop();
+  clearSignals();
+  session = null;
+  practice = null;
+  countdown = null;
+  show("atlas");
+  $("atlas-count").textContent = `${save.cards.length} / 25 已收藏`;
+  $("atlas-solar").innerHTML = solarChart();
+  const filters = [
+    ["all", "全部"],
+    ...BODIES.filter((b) => CARDS.some((c) => c.body === b.id)).map((b) => [b.id, b.name]),
+    ["exploration", "真实探索"],
+  ];
+  $("atlas-filters").innerHTML = filters
+    .map(
+      ([id, label]) =>
+        `<button class="${filter === id ? "active" : ""}" data-action="atlas-filter" data-body="${id}">${label}</button>`,
+    )
+    .join("");
+  const cards = CARDS.filter(
+    (c) =>
+      filter === "all" ||
+      (filter === "exploration"
+        ? c.kind === "真实探索"
+        : c.body === filter || (filter === "earth" && c.body === "earthmoon")),
+  );
+  $("atlas-cards").innerHTML = cards
+    .map((c) =>
+      save.cards.includes(c.id)
+        ? cardHTML(c.id)
+        : `<article class="knowledge-card locked"><span>${c.code} · ${bodyInfo(c.body).name}</span>${planetSVG(c.body)}<strong>${c.title}</strong><p>第 ${c.id} 关通关后收藏</p></article>`,
+    )
+    .join("");
+}
+function renderPracticeStep() {
+  $("examples")
+    .querySelectorAll(".example")
+    .forEach((el, i) => {
+      el.classList.toggle("practice-current", !!practice && i === practice.cursor);
+      const button = el.querySelector("button");
+      if (button && practice) button.disabled = i !== practice.cursor || practice.hit.has(i);
+    });
+}
+function home() {
+  closeModal();
+  audio.stop();
+  session = null;
+  practice = null;
+  countdown = null;
+  clearSignals();
+  selected = unlocked(save);
+  const l = LEVELS[selected - 1],
+    c = CHAPTERS[l.chapter];
+  show("home");
+  $("home-chapter").textContent = `第${["一", "二", "三", "四", "五"][l.chapter]}章 · ${c.name}`;
+  $("home-goal").textContent = c.line;
+  $("continue-label").textContent = Object.keys(save.stars).length ? "继续旅程" : "开始旅程";
+  $("current-mission").textContent = `第 ${selected} 关 · ${l.name}`;
+  $("network-count").textContent = `${Object.keys(save.stars).length} / 25`;
+  $("home-towers").innerHTML = CHAPTERS.map(
+    (c, i) =>
+      `<button class="home-tower" data-action="map" aria-label="${c.tower}，${towerProgress(save, i)}/5"><div>${towerSVG(towerProgress(save, i), c.color)}</div><span>${c.name}<small>${towerProgress(save, i)} / 5</small></span></button>`,
+  ).join("");
+  $("home-solar").innerHTML = solarChart() + chapterRoutes();
+}
+function map() {
+  closeModal();
+  audio.stop();
+  session = null;
+  countdown = null;
+  practice = null;
+  clearSignals();
+  show("map");
+  const open = unlocked(save);
+  $("map-progress").textContent = `${Object.keys(save.stars).length} / 25 已接通`;
+  $("map-solar").innerHTML = solarChart();
+  $("chapter-map").innerHTML = chapterRoutes();
+  $("map-badges").innerHTML = CHAPTERS.map(
+    (c, i) => `<span class="${towerProgress(save, i) === 5 ? "earned" : ""}">✧ ${c.badge}</span>`,
+  ).join("");
+}
+function briefing(id) {
+  if (id > unlocked(save) || id < 1 || id > 25) return;
+  closeModal();
+  audio.stop();
+  session = null;
+  countdown = null;
+  clearSignals();
+  selected = id;
+  const l = LEVELS[id - 1],
+    c = CHAPTERS[l.chapter];
+  show("briefing");
+  $("briefing-number").textContent = `第 ${id} 关`;
+  $("briefing-title").textContent = l.name;
+  $("briefing-goal").textContent =
+    `本关观测：${bodyInfo(l.body).name}${l.id === 6 ? " · 游戏故事：远星号失联了，寻找它的求救信号。" : ""}`;
+  $("briefing-rule").textContent = `只点：${ruleText(l.rule)}`;
+  $("briefing-tower").innerHTML = planetSVG(l.body);
+  $("briefing-chapter").textContent = c.name;
+  $("pass-requirement").textContent =
+    `${l.duration} 秒 · 目标接收 ≥ ${pct(l.minHit)} · 干扰识别 ≥ ${pct(1 - l.maxFalse)}`;
+  const mustPractice = l.practice && !save.practiced.includes(id);
+  practice = mustPractice
+    ? { remaining: 5, hit: new Set(), failed: false, examples: examples(l), cursor: 0 }
+    : null;
+  $("examples").innerHTML = examples(l)
+    .map(
+      (s, i) =>
+        `<div class="example">${mustPractice ? `<button data-action="practice" data-index="${i}" aria-label="练习：${signalName(s)}">${signalSVG(s)}</button>` : signalSVG(s)}<span class="example-cue ${s.target ? "yes" : "no"}" role="img" aria-label="${s.target ? "点击目标" : "忽略干扰"}">${icon(s.target ? "accept" : "ignore")}</span></div>`,
+    )
+    .join("");
+  $("ready").disabled = mustPractice;
+  $("ready").innerHTML = mustPractice ? "先完成练习" : "我会了 <b>➜</b>";
+  $("practice-hint").className = "practice-hint";
+  $("practice-hint").textContent = mustPractice ? "练习 1 / 3 · 5 秒" : l.demo;
+  renderPracticeStep();
+  last = performance.now();
+}
+function practiceClick(index) {
+  if (!practice || practice.remaining <= 0) return;
+  if (index !== practice.cursor) return;
+  const s = practice.examples[index],
+    button = $("examples").querySelector(`[data-index="${index}"]`);
+  if (s.target) {
+    if (practice.hit.has(index)) return;
+    practice.hit.add(index);
+    button.disabled = true;
+    button.classList.add("confirmed");
+    audio.play("hit");
+  } else {
+    practice.failed = true;
+    button.classList.add("wrong");
+    $("practice-hint").className = "practice-hint wrong";
+    $("practice-hint").textContent = "再试一次";
+    audio.play("error");
+  }
+}
+function tickPractice(dt) {
+  if (!practice || $("modal").open || document.hidden) return;
+  const before = Math.ceil(practice.remaining);
+  practice.remaining -= dt;
+  const completed = Math.min(3, Math.floor((5 - practice.remaining + 1e-8) / (5 / 3)));
+  while (practice.cursor < completed) {
+    if (practice.examples[practice.cursor].target && !practice.hit.has(practice.cursor))
+      practice.failed = true;
+    practice.cursor++;
+  }
+  renderPracticeStep();
+  if (practice.remaining > 0) {
+    if (before !== Math.ceil(practice.remaining) && !practice.failed)
+      $("practice-hint").textContent =
+        `练习 ${Math.min(3, practice.cursor + 1)} / 3 · ${Math.ceil(practice.remaining)} 秒`;
+    return;
+  }
+  const okay =
+    !practice.failed && practice.examples.every((s, i) => !s.target || practice.hit.has(i));
+  if (okay) {
+    save.practiced = [...new Set([...save.practiced, selected])];
+    persist();
+    $("practice-hint").className = "practice-hint";
+    $("practice-hint").textContent = "";
+    $("ready").disabled = false;
+    $("ready").innerHTML = "我会了 <b>➜</b>";
+    practice = null;
+  } else {
+    practice = null;
+    $("practice-hint").className = "practice-hint wrong";
+    $("practice-hint").textContent = "再试一次";
+    $("ready").disabled = false;
+    $("ready").textContent = "重新练习";
+  }
+}
+function start() {
+  const l = LEVELS[selected - 1];
+  if (l.practice && !save.practiced.includes(selected)) {
+    briefing(selected);
+    return;
+  }
+  closeModal();
+  audio.unlock();
+  audio.play("launch");
+  audio.bed(true);
+  practice = null;
+  clearSignals();
+  session = new Session(l);
+  countdown = 3;
+  show("game");
+  syncReceiver();
+  world.level = l;
+  $("game-root").classList.remove("paused");
+  $("play-level").textContent =
+    `${CHAPTERS[l.chapter].name} / ${String(selected).padStart(2, "0")}`;
+  $("play-name").textContent = l.name;
+  $("scanners").innerHTML = "";
+  $("environment-clouds").hidden = !(l.backgroundClouds || l.backgroundDust);
+  $("active-rule").innerHTML = l.rule
+    .map((r) => {
+      const sample = examples({ ...l, rule: [r] })[0];
+      return `<span class="rule-symbol">${signalSVG(sample)}</span><span>${esc(ruleText([r]))}</span>`;
+    })
+    .join("<span>或</span>");
+  $("countdown").hidden = false;
+  $("countdown").querySelector("strong").textContent = "3";
+  $("countdown-rule").textContent = ruleText(l.rule);
+  $("judgment").className = "judgment";
+  $("judgment").textContent = "";
+  $("combo").className = "combo";
+  $("hits").textContent = "0";
+  $("play-tower").innerHTML =
+    `<div class="observation-image">${planetSVG(l.body)}<div class="observation-tiles">${Array.from({ length: 20 }, () => "<i></i>").join("")}</div></div>`;
+  $("play-tower-name").textContent = `观测图像 · ${bodyInfo(l.body).name}`;
+  $("repair-segments").innerHTML =
+    `<span id="image-progress">0 / ${session.schedule.filter((s) => s.target).length}</span>`;
+  updateTime();
+  last = performance.now();
+  lastRenderSecond = -1;
+}
+function updateTime() {
+  if (!session) return;
+  const remaining = Math.max(0, session.level.duration - session.elapsed);
+  $("timer").textContent = Math.ceil(remaining);
+  $("timer-ring").style.strokeDashoffset = 176 * (1 - remaining / session.level.duration);
+  $("timer").parentElement.classList.toggle("urgent", remaining <= 10);
+}
+function renderSignals() {
+  if (!session) return;
+  const live = new Set(session.active.map((s) => s.id)),
+    now = session.elapsed;
+  for (const [id, node] of nodes) {
+    if (!live.has(id)) {
+      node.el.remove();
+      node.dust.remove();
+      nodes.delete(id);
+    }
+  }
+  for (const s of session.active) {
+    let node = nodes.get(s.id);
+    if (!node) {
+      const el = document.createElement("button"),
+        dust = document.createElement("div");
+      el.className = "signal-pod";
+      el.dataset.signal = s.id;
+      el.style.setProperty("--signal-color", COLORS[s.color]);
+      el.setAttribute("aria-label", signalName(s));
+      el.innerHTML = signalSVG(s);
+      dust.className = "signal-dust";
+      dust.setAttribute("aria-hidden", "true");
+      dust.hidden = true;
+      $("signals").append(el, dust);
+      node = { el, dust, s };
+      nodes.set(s.id, node);
+    }
+    const pos = positionOf(s, now, world.width, world.height, session.level);
+    node.pos = pos;
+    const size = world.width <= 550 ? 62 : 72;
+    node.el.style.transform = `translate(${pos.x - size / 2}px,${pos.y - size / 2}px)`;
+    const obscured = isHidden(s, now);
+    node.el.classList.toggle("obscured", obscured);
+    node.el.setAttribute("aria-disabled", String(obscured));
+    node.el.tabIndex = obscured ? -1 : 0;
+    node.dust.hidden = !obscured;
+    const coverWidth = size * 1.45;
+    node.dust.style.width = `${coverWidth}px`;
+    node.dust.style.height = `${size}px`;
+    node.dust.style.transform = `translate(${pos.x - coverWidth / 2}px,${pos.y - size * 0.42}px) rotate(${s.id % 2 ? -7 : 7}deg)`;
+  }
+}
+function consume() {
+  for (const e of session.events.splice(0)) {
+    if (e.kind === "rejections") continue;
+    const p = positionOf(e.signal, e.time, world.width, world.height, session.level),
+      good = e.kind === "hits";
+    world.burst(p.x, p.y, good ? COLORS[e.signal.color] : "#f3a98d", good ? "hit" : "error");
+    const node = nodes.get(e.signal.id);
+    if (node) {
+      node.el.remove();
+      node.dust?.remove();
+      nodes.delete(e.signal.id);
+    }
+    $("judgment").textContent = good
+      ? "接收成功"
+      : e.kind === "misses"
+        ? "目标漏接"
+        : mismatch(e.signal, session.level.rule);
+    $("judgment").className = good ? "judgment visible" : "judgment visible error";
+    feedbackUntil = session.elapsed + 0.8;
+    audio.play(good ? "hit" : "error");
+    $("hits").textContent = session.stats.hits;
+    $("image-progress").textContent =
+      `${session.stats.hits} / ${session.schedule.filter((s) => s.target).length}`;
+    $("play-tower")
+      .querySelectorAll(".observation-tiles i")
+      .forEach((tile, i) =>
+        tile.classList.toggle(
+          "restored",
+          i <
+            Math.floor((20 * session.stats.hits) / session.schedule.filter((s) => s.target).length),
+        ),
+      );
+    $("scanners").classList.toggle("accepted", good);
+  }
+  const streak = session.stats.streak;
+  if (streak >= 5) {
+    $("combo").innerHTML = `${streak}<small>连续正确</small>`;
+    $("combo").className = "combo visible";
+  } else $("combo").className = "combo";
+}
+function clickSignal(id) {
+  if (session?.state !== "playing") return;
+  audio.unlock();
+  const result = session.click(id);
+  if (result !== "hits" && result !== "falseAlarms") return;
+  consume();
+  renderSignals();
+}
+function finish() {
+  audio.stop();
+  clearSignals();
+  countdown = null;
+  $("countdown").hidden = true;
+  const r = session.result(),
+    l = session.level;
+  save = recordResult(save, session);
+  persist();
+  show("result");
+  $("result-kicker").textContent = `第 ${l.id} 关 · ${l.name}`;
+  $("result-stars").innerHTML = [1, 2, 3]
+    .map((n) => `<span class="${n <= r.stars ? "earned" : ""}">★</span>`)
+    .join("");
+  $("result-title").textContent = r.passed ? "信号接通" : "再试一次";
+  $("result-message").textContent = r.passed
+    ? l.id < 25
+      ? `下一任务：${bodyInfo(LEVELS[l.id].body).name} · ${LEVELS[l.id].name}`
+      : "太阳系游戏节点全部接通"
+    : [
+        r.hitRate < l.minHit ? "目标接收率未达标" : "",
+        r.falseRate > l.maxFalse ? "干扰识别率未达标" : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+  $("result-card").innerHTML = r.passed
+    ? cardHTML(l.id)
+    : `<div class="locked-knowledge">${planetSVG(l.body)}<span>K${String(l.id).padStart(2, "0")} · 达标后收藏知识卡</span></div>`;
+  $("result-score").textContent = r.clarity ?? 0;
+  $("score-ring").style.strokeDashoffset = 490 * (1 - (r.clarity ?? 0) / 100);
+  $("result-hit").textContent = pct(r.hitRate);
+  $("result-reject").textContent = pct(r.rejectionRate);
+  $("result-hit-limit").textContent = `${r.hitRate >= l.minHit ? "✓" : "○"} ≥ ${pct(l.minHit)}`;
+  $("result-hit-limit").className = r.hitRate >= l.minHit ? "" : "fail";
+  $("result-reject-limit").textContent =
+    `${r.falseRate <= l.maxFalse ? "✓" : "○"} ≥ ${pct(1 - l.maxFalse)}`;
+  $("result-reject-limit").className = r.falseRate <= l.maxFalse ? "" : "fail";
+  $("next").hidden = !r.passed;
+  $("next").innerHTML = l.checkpoint ? "章节验收 <b>➜</b>" : "下一关 <b>➜</b>";
+  celebrated = false;
+  if (r.passed) {
+    audio.play("win");
+    world.celebrate(CHAPTERS[l.chapter].color);
+  } else audio.play("error");
+}
+function chapter() {
+  const l = LEVELS[selected - 1],
+    c = CHAPTERS[l.chapter];
+  show("chapter");
+  $("chapter-repaired").textContent = `第${["一", "二", "三", "四", "五"][l.chapter]}章完成`;
+  $("chapter-art").innerHTML =
+    selected === 10
+      ? '<img src="./assets/rescue-ship.webp" alt="获救的远星号">'
+      : selected === 25
+        ? `<div class="galaxy-zoom">${planetSVG("solar")}${galaxySVG()}</div>`
+        : planetSVG(l.body);
+  $("chapter-network").innerHTML = CHAPTERS.map(
+    (c, i) =>
+      `<div class="chapter-stamp ${towerProgress(save, i) === 5 ? "earned" : ""}">✧<small>${c.badge}</small></div>`,
+  ).join("");
+  $("chapter-network").hidden = false;
+  $("chapter-network").style.setProperty(
+    "--network-progress",
+    `${(session.level.chapter / 4) * 100}%`,
+  );
+  $("chapter-title").textContent =
+    selected === 10
+      ? "欢迎回家，远星号"
+      : selected === 25
+        ? "太阳系全网接通"
+        : `${c.name} · 验收完成`;
+  $("chapter-line").textContent =
+    selected === 10
+      ? "游戏故事 · 失联科考船远星号已安全获救，本次救援完成。"
+      : selected === 25
+        ? "天文知识 · 太阳系位于银河系猎户臂的一段。"
+        : `${c.name}的五个观测节点已接通`;
+  $("chapter-badge").textContent = `✧ 获得徽章 · ${c.badge}`;
+  $("chapter-next").innerHTML = selected === 25 ? "返回星网 <b>➜</b>" : "继续旅程 <b>➜</b>";
+  audio.play("repair");
+  world.celebrate(c.color);
+  celebrated = true;
+}
+function next() {
+  if (!session?.result().passed) return;
+  if (session.level.checkpoint && !celebrated) chapter();
+  else if (selected === 25) map();
+  else briefing(selected + 1);
+}
+function modal(title, html, mode) {
+  modalMode = mode;
+  $("modal-content").innerHTML =
+    `<div class="modal-heading"><h2 id="modal-title">${title}</h2><button data-action="close" aria-label="关闭弹窗">${icon("close")}</button></div>${html}`;
+  if (!$("modal").open) $("modal").showModal();
+}
+function closeModal() {
+  if ($("modal").open) $("modal").close();
+  modalMode = null;
+}
+function pause() {
+  if (screen !== "game" || !session || !["playing", "ready"].includes(session.state)) return;
+  if (session.state === "playing") session.pause();
+  else session.state = "paused-countdown";
+  audio.stop();
+  $("game-root").classList.add("paused");
+  modal(
+    "已暂停",
+    `<p>只点：${esc(ruleText(session.level.rule))}</p><button class="action-button gold" data-action="resume">继续接收 <b>➜</b></button><button class="action-button outline" data-action="settings">设置</button><button class="action-button outline" data-action="quit">返回航线</button>`,
+    "pause",
+  );
+}
+function resume() {
+  closeModal();
+  audio.unlock();
+  if (session?.state === "paused") session.resume();
+  if (session?.state === "paused-countdown") session.state = "ready";
+  last = performance.now();
+  $("game-root").classList.remove("paused");
+  if (screen === "game") audio.bed(true);
+}
+function settings() {
+  if (screen === "game") pause();
+  modal(
+    "设置",
+    `<div class="setting-row"><span>声音</span><button data-action="sound">${save.muted ? "关闭" : "开启"}</button></div><button class="action-button outline" data-action="help">玩法说明</button><button class="action-button outline" data-action="records">航行记录</button>`,
+    "settings",
+  );
+}
+function help() {
+  modal(
+    "玩法说明",
+    '<ol class="help-list"><li>点击从两侧飞入、符合规则的信号。</li><li>信号飞出前完成判断，后期加入分区扫描与变速。</li><li>通过一关恢复一个节点，收藏一张知识卡。</li><li>空格或Esc暂停；切换后台会自动暂停。</li></ol><button class="action-button gold" data-action="close">我知道了</button>',
+    "help",
+  );
+}
+function records() {
+  if (screen === "game") pause();
+  const rows = [...save.history].reverse();
+  modal(
+    "航行记录",
+    rows.length
+      ? rows
+          .slice(0, 25)
+          .map(
+            (r) =>
+              `<div class="log-row"><div>第 ${r.level} 关 · ${r.ruleVersion === 4 ? LEVELS[r.level - 1].name : "旧版记录"}<small>${pct(r.hitRate)} 接收 · ${pct(r.rejectionRate)} 识别 · ${r.passed ? "通过" : "重试"}</small></div><span>${r.clarity}</span></div>`,
+          )
+          .join("") + '<button class="action-button outline" data-action="export">导出记录</button>'
+      : "<p>暂无记录</p>",
+    "records",
+  );
+}
+function exportRecords() {
+  const blob = new Blob(
+      [
+        JSON.stringify(
+          { version: 2, exportedAt: new Date().toISOString(), history: save.history },
+          null,
+          2,
+        ),
+      ],
+      { type: "application/json" },
+    ),
+    url = URL.createObjectURL(blob),
+    a = document.createElement("a");
+  a.href = url;
+  a.download = "星际信号站-航行记录.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function routeAction(action, button) {
+  audio.unlock();
+  if (action === "practice") {
+    practiceClick(Number(button.dataset.index));
+    return;
+  }
+  if (action === "level") {
+    briefing(Number(button.dataset.level));
+    return;
+  }
+  switch (action) {
+    case "body":
+      bodyDetail(button.dataset.body);
+      break;
+    case "atlas":
+      atlas(button.dataset.body || "all");
+      break;
+    case "atlas-filter":
+      atlas(button.dataset.body);
+      break;
+    case "chapter-card":
+      modal("观测知识", cardHTML(selected), "card");
+      break;
+    case "skip-animation":
+      $("game-root").classList.add("skip-effects");
+      world.fx = [];
+      break;
+    case "rules":
+      pause();
+      modal(
+        "本关规则",
+        `<p>只点：${ruleText(session.level.rule)}</p><div class="examples">${examples(session.level)
+          .map(
+            (s) =>
+              `<div class="example">${signalSVG(s)}<span class="example-cue ${s.target ? "yes" : "no"}">${icon(s.target ? "accept" : "ignore")}</span></div>`,
+          )
+          .join(
+            "",
+          )}</div><p>${session.level.demo}</p><button class="action-button gold" data-action="resume">继续接收</button>`,
+        "rules",
+      );
+      break;
+    case "home":
+      home();
+      break;
+    case "map":
+      map();
+      break;
+    case "retry":
+      briefing(selected);
+      break;
+    case "resume":
+      resume();
+      break;
+    case "quit":
+      modal(
+        "返回航线？",
+        '<p>本局进度不会保存。</p><button class="action-button gold" data-action="resume">继续本局</button><button class="action-button outline" data-action="map">返回航线</button>',
+        "quit",
+      );
+      break;
+    case "close":
+      if (session && ["paused", "paused-countdown"].includes(session.state)) resume();
+      else closeModal();
+      break;
+    case "sound":
+      save.muted = !save.muted;
+      persist();
+      preferences();
+      settings();
+      break;
+    case "settings":
+      settings();
+      break;
+    case "help":
+      help();
+      break;
+    case "records":
+      records();
+      break;
+    case "export":
+      exportRecords();
+      break;
+  }
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-action]");
+  if (b && !b.disabled) routeAction(b.dataset.action, b);
+});
+$("continue").addEventListener("click", () => {
+  audio.unlock();
+  audio.play("click");
+  briefing(unlocked(save));
+});
+$("open-map").addEventListener("click", map);
+$("brand-home").addEventListener("click", home);
+$("records").addEventListener("click", records);
+$("ready").addEventListener("click", start);
+$("pause").addEventListener("click", pause);
+$("next").addEventListener("click", next);
+$("chapter-next").addEventListener("click", () =>
+  selected === 25 ? map() : briefing(selected + 1),
+);
+$("settings").addEventListener("click", settings);
+$("sound").addEventListener("click", () => {
+  save.muted = !save.muted;
+  persist();
+  preferences();
+  if (!save.muted) audio.play("click");
+});
+$("fullscreen").addEventListener("click", async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch {
+    toast("当前浏览器不支持全屏");
+  }
+});
+$("signals").addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
+  const b = e.target.closest("[data-signal]");
+  if (!b) return;
+  e.preventDefault();
+  clickSignal(Number(b.dataset.signal));
+});
+$("signals").addEventListener("click", (e) => {
+  if (e.detail !== 0) return;
+  const b = e.target.closest("[data-signal]");
+  if (b) clickSignal(Number(b.dataset.signal));
+});
+$("modal").addEventListener("cancel", (e) => {
+  e.preventDefault();
+  routeAction("close");
+});
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && screen === "game" && !$("modal").open) {
+    e.preventDefault();
+    if (!e.repeat) pause();
+    return;
+  }
+  if (e.repeat) return;
+  if (e.code === "Escape" && !$("modal").open && screen === "game") {
+    e.preventDefault();
+    pause();
+  }
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    pause();
+    audio.stop();
+  } else last = performance.now();
+});
+window.addEventListener("blur", () => {
+  if (!$("modal").open) pause();
+});
+function syncReceiver() {
+  const ship = $("battle-ship").getBoundingClientRect();
+  const field = $("game-root").getBoundingClientRect();
+  if (!ship.width) return;
+  world.receiver = {
+    x: ship.left - field.left + ship.width / 2,
+    y: ship.top - field.top + ship.height / 2,
+    r: ship.width * 0.56,
+  };
+}
+$("battle-ship").querySelector("img").addEventListener("load", syncReceiver);
+new ResizeObserver(() => {
+  world.resize();
+  syncReceiver();
+  if (session) renderSignals();
+}).observe($("game-root"));
+function frame(now) {
+  let dt = last ? Math.max(0, (now - last) / 1000) : 0;
+  last = now;
+  if (dt > 1) {
+    if (screen === "game") pause();
+    dt = 0;
+  }
+  if (screen === "briefing") tickPractice(dt);
+  if (screen === "game" && session && ["playing", "ready"].includes(session.state)) {
+    if (countdown !== null) {
+      const before = Math.ceil(countdown);
+      countdown -= dt;
+      if (countdown <= 0) {
+        countdown = null;
+        $("countdown").hidden = true;
+        session.start();
+      } else if (Math.ceil(countdown) !== before) {
+        $("countdown").querySelector("strong").textContent = Math.ceil(countdown);
+        audio.play("count");
+      }
+    } else {
+      session.tick(dt);
+      consume();
+      renderSignals();
+      if (Math.ceil(session.elapsed) !== lastRenderSecond) {
+        lastRenderSecond = Math.ceil(session.elapsed);
+        updateTime();
+      }
+      if (session.elapsed > feedbackUntil) {
+        $("judgment").classList.remove("visible");
+        $("scanners").classList.remove("accepted");
+      }
+      if (session.state === "finished") finish();
+    }
+  }
+  world.draw(Math.min(dt, 0.08), session);
+  if (now > toastUntil) $("toast").classList.remove("visible");
+  requestAnimationFrame(frame);
+}
+$("home-companion").innerHTML = bunnySVG + '<span class="bunny-name">星小兔</span>';
+$("fullscreen").innerHTML = icon("fullscreen");
+$("settings").innerHTML = icon("settings");
+$("pause").innerHTML = icon("pause");
+preferences();
+home();
+requestAnimationFrame(frame);
+// Same-origin configuration can be updated independently from the client. Loading never blocks play beyond 1.5 seconds.
+const abort = new AbortController(),
+  timeout = setTimeout(() => abort.abort(), 1500);
+fetch("./config.json", { signal: abort.signal, cache: "no-cache" })
+  .then((r) => (r.ok ? r.json() : null))
+  .then((config) => {
+    if (config?.version === 2 && raw === null && config.soundDefault === false) {
+      save.muted = true;
+      preferences();
+    }
+  })
+  .catch(() => {})
+  .finally(() => {
+    clearTimeout(timeout);
+    $("loading").classList.add("done");
+    setTimeout(() => ($("loading").hidden = true), 350);
+  });

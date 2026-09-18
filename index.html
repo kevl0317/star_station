@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#071320" />
+    <title>星际信号站 · 太阳系观测网</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath fill='%238bd9ed' d='M20 2L25 15L39 20L25 25L20 38L15 25L1 20L15 15Z'/%3E%3C/svg%3E"
+    />
+    <link rel="preload" as="image" href="./assets/galaxy.webp" />
+    <link rel="preload" as="image" href="./assets/signal-occluder.webp" />
+    <link rel="stylesheet" href="./src/style.css" />
+    <link rel="stylesheet" href="./src/solar.css" />
+    <script type="module" src="./src/app.mjs"></script>
+  </head>
+  <body>
+    <main id="game-root" data-screen="home">
+      <div class="space-backdrop" aria-hidden="true"></div>
+      <div class="space-vignette" aria-hidden="true"></div>
+      <canvas id="world-fx" aria-hidden="true"></canvas>
+      <div class="loading" id="loading">
+        <span class="loading-star">✦</span><span>星际信号站</span><i></i>
+      </div>
+      <header class="global-hud">
+        <button id="brand-home" class="brand" aria-label="返回首页">
+          <span>✦</span> 星际信号站
+        </button>
+        <div class="top-actions">
+          <span id="star-total" class="star-total">★ 0 <small>/ 75</small></span
+          ><button id="sound" class="icon-button" aria-label="关闭声音"></button
+          ><button id="fullscreen" class="icon-button" aria-label="全屏"></button
+          ><button id="settings" class="icon-button" aria-label="设置"></button>
+        </div>
+      </header>
+
+      <section class="screen home-screen" id="home-screen" aria-label="游戏首页">
+        <div class="hero-copy">
+          <div class="chapter-ribbon" id="home-chapter">第一章 · 星港出发</div>
+          <h1>星际<span>信号站</span></h1>
+          <div class="title-line"></div>
+          <p id="home-goal">唤醒沉睡的接收器</p>
+          <div class="hero-actions">
+            <button id="continue" class="action-button gold">
+              <span id="continue-label">开始旅程</span><b>➜</b></button
+            ><button id="open-map" class="action-button outline">太阳系星图 <span>◇</span></button>
+            <button class="action-button outline" data-action="atlas">
+              星图图鉴 <span>▤</span>
+            </button>
+          </div>
+          <div class="current-mission" id="current-mission">第 1 关 · 初醒信号</div>
+        </div>
+        <div class="home-solar" id="home-solar"></div>
+        <div class="companion" id="home-companion"></div>
+        <div class="home-bottom">
+          <div class="network-summary">
+            <span>星网重联</span><strong id="network-count">0 / 25</strong>
+          </div>
+          <div id="home-towers" class="home-towers"></div>
+          <button id="records" class="text-button">航行记录 ↗</button>
+        </div>
+      </section>
+
+      <section class="screen map-screen" id="map-screen" hidden aria-label="太阳系星图">
+        <div class="screen-title">
+          <button class="icon-button" data-action="home" aria-label="返回首页">←</button>
+          <div>
+            <span class="overline">星网重联</span>
+            <h2>太阳系星图</h2>
+          </div>
+          <div id="map-progress" class="map-progress"></div>
+        </div>
+        <div id="map-solar" class="map-solar"></div>
+        <div id="chapter-map" class="chapter-map"></div>
+        <div id="map-badges" class="map-badges"></div>
+      </section>
+
+      <section class="screen atlas-screen" id="atlas-screen" hidden aria-label="星图图鉴">
+        <div class="screen-title">
+          <button class="icon-button" data-action="home" aria-label="返回首页">←</button>
+          <div>
+            <span class="overline">观测档案</span>
+            <h2>星图图鉴</h2>
+          </div>
+          <div id="atlas-count"></div>
+        </div>
+        <div id="atlas-solar"></div>
+        <div id="atlas-filters" class="atlas-filters"></div>
+        <div id="atlas-cards" class="atlas-cards"></div>
+      </section>
+
+      <section class="screen briefing-screen" id="briefing-screen" hidden aria-label="关前规则">
+        <button class="back-button" data-action="map">← 航线</button>
+        <div class="briefing-layout">
+          <div class="briefing-art">
+            <div id="briefing-tower"></div>
+            <div id="briefing-chapter" class="chapter-ribbon"></div>
+          </div>
+          <div class="briefing-content">
+            <span id="briefing-number" class="overline"></span>
+            <h2 id="briefing-title"></h2>
+            <p id="briefing-goal" class="mission-goal"></p>
+            <div class="rule-heading" id="briefing-rule"></div>
+            <div id="examples" class="examples"></div>
+            <p id="practice-hint" class="practice-hint" role="status"></p>
+            <button id="ready" class="action-button gold">我会了 <b>➜</b></button>
+            <div id="pass-requirement" class="pass-requirement"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen play-screen" id="play-screen" hidden aria-label="信号接收">
+        <div class="play-hud">
+          <div class="level-indicator">
+            <span id="play-level"></span><strong id="play-name"></strong>
+          </div>
+          <div class="active-rule" id="active-rule"></div>
+          <div class="timer-wrap">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <circle cx="32" cy="32" r="28" class="timer-track" />
+              <circle cx="32" cy="32" r="28" id="timer-ring" /></svg
+            ><strong id="timer">60</strong>
+          </div>
+          <button id="pause" class="icon-button" aria-label="暂停游戏"></button>
+          <button class="icon-button" data-action="rules" aria-label="重看规则">?</button>
+        </div>
+        <div class="battle-ship" id="battle-ship">
+          <img src="./assets/rescue-ship.webp" alt="" />
+        </div>
+        <div id="scanners" class="scanners" aria-hidden="true"></div>
+        <div id="environment-clouds" class="environment-clouds" hidden aria-hidden="true"></div>
+        <div id="signals" class="signals"></div>
+        <div id="judgment" class="judgment" role="status"></div>
+        <div id="combo" class="combo"></div>
+        <div class="play-bottom">
+          <div class="chapter-repair">
+            <div id="play-tower"></div>
+            <div>
+              <span id="play-tower-name"></span>
+              <div class="repair-segments" id="repair-segments"></div>
+            </div>
+          </div>
+          <div class="live-count"><span>接收</span><strong id="hits">0</strong></div>
+        </div>
+        <div id="countdown" class="countdown" hidden>
+          <strong>3</strong><span id="countdown-rule"></span>
+        </div>
+      </section>
+
+      <section class="screen result-screen" id="result-screen" hidden aria-label="本关结算">
+        <div class="result-content">
+          <span id="result-kicker" class="overline"></span>
+          <div id="result-stars" class="result-stars"></div>
+          <h2 id="result-title"></h2>
+          <p id="result-message"></p>
+          <div class="score-medallion">
+            <svg viewBox="0 0 180 180" aria-hidden="true">
+              <circle cx="90" cy="90" r="78" />
+              <circle cx="90" cy="90" r="78" id="score-ring" /></svg
+            ><strong id="result-score">0</strong><span>信号清晰度</span>
+          </div>
+          <div class="result-metrics">
+            <div>
+              <span>目标接收率</span><strong id="result-hit"></strong
+              ><small id="result-hit-limit"></small>
+            </div>
+            <div>
+              <span>干扰识别率</span><strong id="result-reject"></strong
+              ><small id="result-reject-limit"></small>
+            </div>
+          </div>
+          <div class="result-buttons">
+            <button class="action-button outline" data-action="map">返回航线</button
+            ><button class="action-button outline" data-action="retry">重试</button
+            ><button id="next" class="action-button gold">继续 <b>➜</b></button>
+          </div>
+          <div id="result-card"></div>
+          <button class="text-button skip-animation" data-action="skip-animation">跳过动画</button>
+        </div>
+      </section>
+
+      <section class="screen chapter-screen" id="chapter-screen" hidden aria-label="章节修复">
+        <div class="chapter-cinematic">
+          <span id="chapter-repaired" class="overline"></span>
+          <div id="chapter-art" class="chapter-art"></div>
+          <div id="chapter-network" class="chapter-network"></div>
+          <h2 id="chapter-title"></h2>
+          <p id="chapter-line"></p>
+          <div id="chapter-badge" class="earned-badge"></div>
+          <button id="chapter-next" class="action-button gold">继续旅程 <b>➜</b></button>
+          <div class="chapter-options">
+            <button class="text-button" data-action="chapter-card">重看知识</button
+            ><button class="text-button" data-action="home">返回首页</button
+            ><button class="text-button" data-action="skip-animation">跳过动画</button>
+          </div>
+        </div>
+      </section>
+      <div id="toast" class="toast" role="status"></div>
+      <div id="storage-note" class="storage-note" hidden>进度暂时无法保存</div>
+    </main>
+    <dialog id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>
+  </body>
+</html>
