@@ -1,3 +1,5 @@
+import { initPhotoViewer } from "./photo-viewer.mjs";
+import { endingHTML } from "./ending.mjs";
 import { isHidden } from "./engine.mjs";
 import { CHAPTERS, LEVELS, COLORS, ruleText, examples, mismatch } from "./levels.mjs";
 import {
@@ -14,6 +16,7 @@ import { Session, SAVE_KEY, readSave, unlocked, towerProgress, recordResult } fr
 import { icon, signalSVG, signalName, towerSVG } from "./art.mjs";
 import { WorldRenderer, positionOf } from "./renderer.mjs";
 import { GameAudio } from "./audio.mjs";
+initPhotoViewer();
 const $ = (id) => document.getElementById(id),
   esc = (s) =>
     String(s).replace(
@@ -45,12 +48,12 @@ const nodes = new Map(),
   world = new WorldRenderer($("world-fx"));
 const screens = {
   home: "home-screen",
-  map: "map-screen",
   briefing: "briefing-screen",
   game: "play-screen",
   result: "result-screen",
   chapter: "chapter-screen",
   atlas: "atlas-screen",
+  ending: "ending-screen",
 };
 const pct = (n) => (n === null ? "—" : `${(n * 100).toFixed(1)}%`);
 function persist() {
@@ -164,7 +167,7 @@ function atlas(filter = "all") {
     .map((c) =>
       save.cards.includes(c.id)
         ? cardHTML(c.id)
-        : `<article class="knowledge-card locked"><span>${c.code} · ${bodyInfo(c.body).name}</span>${planetSVG(c.body)}<strong>${c.title}</strong><p>第 ${c.id} 关通关后收藏</p></article>`,
+        : `<article class="knowledge-card locked"><span>${c.code} · ${bodyInfo(c.body).name}</span>${c.id === 25 ? galaxySVG() : planetSVG(c.body)}<strong>${c.title}</strong><p>第 ${c.id} 关通关后收藏</p></article>`,
     )
     .join("");
 }
@@ -190,30 +193,14 @@ function home() {
   show("home");
   $("home-chapter").textContent = `第${["一", "二", "三", "四", "五"][l.chapter]}章 · ${c.name}`;
   $("home-goal").textContent = c.line;
-  $("continue-label").textContent = Object.keys(save.stars).length ? "继续旅程" : "开始旅程";
+  $("continue-label").textContent = LEVELS.every(l => save.stars[l.id]) ? "重温旅程结尾" : Object.keys(save.stars).length ? "继续旅程" : "开始旅程";
   $("current-mission").textContent = `第 ${selected} 关 · ${l.name}`;
   $("network-count").textContent = `${Object.keys(save.stars).length} / 25`;
   $("home-towers").innerHTML = CHAPTERS.map(
     (c, i) =>
-      `<button class="home-tower" data-action="map" aria-label="${c.tower}，${towerProgress(save, i)}/5"><div>${towerSVG(towerProgress(save, i), c.color)}</div><span>${c.name}<small>${towerProgress(save, i)} / 5</small></span></button>`,
+      `<button class="home-tower" data-action="home" aria-label="${c.tower}，${towerProgress(save, i)}/5"><div>${towerSVG(towerProgress(save, i), c.color)}</div><span>${c.name}<small>${towerProgress(save, i)} / 5</small></span></button>`,
   ).join("");
   $("home-solar").innerHTML = solarChart() + chapterRoutes();
-}
-function map() {
-  closeModal();
-  audio.stop();
-  session = null;
-  countdown = null;
-  practice = null;
-  clearSignals();
-  show("map");
-  const open = unlocked(save);
-  $("map-progress").textContent = `${Object.keys(save.stars).length} / 25 已接通`;
-  $("map-solar").innerHTML = solarChart();
-  $("chapter-map").innerHTML = chapterRoutes();
-  $("map-badges").innerHTML = CHAPTERS.map(
-    (c, i) => `<span class="${towerProgress(save, i) === 5 ? "earned" : ""}">✧ ${c.badge}</span>`,
-  ).join("");
 }
 function briefing(id) {
   if (id > unlocked(save) || id < 1 || id > 25) return;
@@ -342,11 +329,17 @@ function start() {
   $("judgment").textContent = "";
   $("combo").className = "combo";
   $("hits").textContent = "0";
+  const targetCount = session.schedule.filter((s) => s.target).length;
+  const tileRows = Math.max(1, Math.round(Math.sqrt(targetCount / 1.15)));
+  const tiles = Array.from({ length: tileRows }, (_, row) => {
+    const count = Math.floor(targetCount / tileRows) + (row < targetCount % tileRows ? 1 : 0);
+    return `<div class="observation-tile-row">${"<i></i>".repeat(count)}</div>`;
+  }).join("");
   $("play-tower").innerHTML =
-    `<div class="observation-image">${planetSVG(l.body)}<div class="observation-tiles">${Array.from({ length: 20 }, () => "<i></i>").join("")}</div></div>`;
+    `<div class="observation-image">${planetSVG(l.body)}<div class="observation-tiles">${tiles}</div></div>`;
   $("play-tower-name").textContent = `观测图像 · ${bodyInfo(l.body).name}`;
   $("repair-segments").innerHTML =
-    `<span id="image-progress">0 / ${session.schedule.filter((s) => s.target).length}</span>`;
+    `<span id="image-progress">0 / ${targetCount}</span>`;
   updateTime();
   last = performance.now();
   lastRenderSecond = -1;
@@ -429,8 +422,7 @@ function consume() {
       .forEach((tile, i) =>
         tile.classList.toggle(
           "restored",
-          i <
-            Math.floor((20 * session.stats.hits) / session.schedule.filter((s) => s.target).length),
+          i < session.stats.hits,
         ),
       );
     $("scanners").classList.toggle("accepted", good);
@@ -488,7 +480,7 @@ function finish() {
     `${r.falseRate <= l.maxFalse ? "✓" : "○"} ≥ ${pct(1 - l.maxFalse)}`;
   $("result-reject-limit").className = r.falseRate <= l.maxFalse ? "" : "fail";
   $("next").hidden = !r.passed;
-  $("next").innerHTML = l.checkpoint ? "章节验收 <b>➜</b>" : "下一关 <b>➜</b>";
+  $("next").innerHTML = l.id === 25 ? "完成旅程 <b>➜</b>" : l.checkpoint ? "章节验收 <b>➜</b>" : "下一关 <b>➜</b>";
   celebrated = false;
   if (r.passed) {
     audio.play("win");
@@ -503,9 +495,7 @@ function chapter() {
   $("chapter-art").innerHTML =
     selected === 10
       ? '<img src="./assets/rescue-ship.webp" alt="获救的远星号">'
-      : selected === 25
-        ? `<div class="galaxy-zoom">${planetSVG("solar")}${galaxySVG()}</div>`
-        : planetSVG(l.body);
+      : planetSVG(l.body);
   $("chapter-network").innerHTML = CHAPTERS.map(
     (c, i) =>
       `<div class="chapter-stamp ${towerProgress(save, i) === 5 ? "earned" : ""}">✧<small>${c.badge}</small></div>`,
@@ -518,26 +508,31 @@ function chapter() {
   $("chapter-title").textContent =
     selected === 10
       ? "欢迎回家，远星号"
-      : selected === 25
-        ? "太阳系全网接通"
-        : `${c.name} · 验收完成`;
+      : `${c.name} · 验收完成`;
   $("chapter-line").textContent =
     selected === 10
       ? "游戏故事 · 失联科考船远星号已安全获救，本次救援完成。"
-      : selected === 25
-        ? "天文知识 · 太阳系位于银河系猎户臂的一段。"
-        : `${c.name}的五个观测节点已接通`;
+      : `${c.name}的五个观测节点已接通`;
   $("chapter-badge").textContent = `✧ 获得徽章 · ${c.badge}`;
-  $("chapter-next").innerHTML = selected === 25 ? "返回星网 <b>➜</b>" : "继续旅程 <b>➜</b>";
+  $("chapter-next").innerHTML = "继续旅程 <b>➜</b>";
   audio.play("repair");
   world.celebrate(c.color);
   celebrated = true;
 }
 function next() {
   if (!session?.result().passed) return;
-  if (session.level.checkpoint && !celebrated) chapter();
-  else if (selected === 25) map();
+  if (session.level.id === 25) ending();
+  else if (session.level.checkpoint && !celebrated) chapter();
   else briefing(selected + 1);
+}
+function ending() {
+  audio.stop();
+  clearSignals();
+  $("ending-screen").innerHTML = endingHTML(save);
+  show("ending");
+  $("ending-screen").scrollTop = 0;
+  audio.play("repair");
+  world.celebrate("#edc994");
 }
 function modal(title, html, mode) {
   modalMode = mode;
@@ -557,7 +552,7 @@ function pause() {
   $("game-root").classList.add("paused");
   modal(
     "已暂停",
-    `<p>只点：${esc(ruleText(session.level.rule))}</p><button class="action-button gold" data-action="resume">继续接收 <b>➜</b></button><button class="action-button outline" data-action="settings">设置</button><button class="action-button outline" data-action="quit">返回航线</button>`,
+    `<p>只点：${esc(ruleText(session.level.rule))}</p><button class="action-button gold" data-action="resume">继续接收 <b>➜</b></button><button class="action-button outline" data-action="restart">重新开始</button><button class="action-button outline" data-action="settings">设置</button><button class="action-button outline" data-action="quit">返回主页</button>`,
     "pause",
   );
 }
@@ -661,19 +656,19 @@ function routeAction(action, button) {
     case "home":
       home();
       break;
-    case "map":
-      map();
-      break;
     case "retry":
       briefing(selected);
+      break;
+    case "restart":
+      if (screen === "game" && session && ["paused", "paused-countdown"].includes(session.state)) start();
       break;
     case "resume":
       resume();
       break;
     case "quit":
       modal(
-        "返回航线？",
-        '<p>本局进度不会保存。</p><button class="action-button gold" data-action="resume">继续本局</button><button class="action-button outline" data-action="map">返回航线</button>',
+        "返回主页？",
+        '<p>本局进度不会保存。</p><button class="action-button gold" data-action="resume">继续本局</button><button class="action-button outline" data-action="home">返回主页</button>',
         "quit",
       );
       break;
@@ -708,7 +703,8 @@ document.addEventListener("click", (e) => {
 $("continue").addEventListener("click", () => {
   audio.unlock();
   audio.play("click");
-  briefing(unlocked(save));
+  if (LEVELS.every(l => save.stars[l.id])) ending();
+  else briefing(unlocked(save));
 });
 $("brand-home").addEventListener("click", home);
 $("records").addEventListener("click", records);
@@ -716,7 +712,7 @@ $("ready").addEventListener("click", start);
 $("pause").addEventListener("click", pause);
 $("next").addEventListener("click", next);
 $("chapter-next").addEventListener("click", () =>
-  selected === 25 ? map() : briefing(selected + 1),
+  briefing(selected + 1),
 );
 $("settings").addEventListener("click", settings);
 $("sound").addEventListener("click", () => {

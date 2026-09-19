@@ -1,3 +1,4 @@
+import { knowledgeFigure, milkyWayDiagram, solarOrbitDiagram } from "./knowledge-art.mjs";
 export const BODIES = [
   ["sun", "太阳", "恒星", "#f6bf57"],
   ["mercury", "水星", "类地行星", "#a5a298"],
@@ -92,7 +93,7 @@ const cards = [
 ];
 export const CARDS = cards.map(([title, text, body, ...refs], i) => ({
   id: i + 1,
-  code: `K${String(i + 1).padStart(2, "0")}`,
+  code: `第${i + 1}关`,
   title,
   text,
   body,
@@ -113,60 +114,24 @@ const generatedBodies = new Set([
   "mars",
   "jupiter",
 ]);
-let serial = 0;
 export function planetSVG(id) {
-  const b = bodyInfo(id),
-    uid = `orb-${serial++}`;
+  const b = bodyInfo(id);
   if (generatedBodies.has(id)) {
     // Ringed sprites need a larger image box to balance the visible globe sizes.
     const size = id === "saturn" ? 196 : id === "uranus" ? 175 : 140;
     return `<svg class="generated-planet" viewBox="0 0 160 165" role="img" aria-label="${b.name}" style="overflow:visible"><image href="./assets/solar-art-v1/${id === "neptune" ? "neptune-ringless" : id}.webp" x="${(160 - size) / 2}" y="${(165 - size) / 2}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/></svg>`;
   }
-  if (id === "solar")
-    return `<svg viewBox="0 0 160 140" role="img" aria-label="太阳系示意"><circle cx="80" cy="70" r="12" fill="#f6c769"/>${[25, 40, 55, 66].map((r, i) => `<ellipse cx="80" cy="70" rx="${r}" ry="${r * 0.58}" fill="none" stroke="#a6cadd55"/><circle cx="${80 + r}" cy="70" r="${4 + i}" fill="${["#af9b81", "#dfb35f", "#75c9de", "#86aae3"][i]}"/>`).join("")}</svg>`;
-  if (id === "asteroids" || id === "kuiper")
-    return `<svg viewBox="0 0 160 140" role="img" aria-label="${b.name}示意">${Array.from(
-      { length: 16 },
-      (_, i) => {
-        const x = 15 + ((i * 43) % 135),
-          y = 20 + ((i * 37) % 100),
-          r = 3 + (i % 5);
-        return `<path d="M${x - r} ${y - r}l${r + 3} -2 ${r} ${r} -2 ${r + 3} -${r + 4} 1 -${r} -${r}Z" fill="${i % 2 ? "#97a3b5" : "#665d58"}" stroke="#cad6d666"/>`;
-      },
-    ).join("")}</svg>`;
+  if (id === "solar") return solarOrbitDiagram({ showLabels: false });
   if (id === "earthmoon")
     return `<div class="earth-moon-art">${planetSVG("earth")}<span>${planetSVG("moon")}</span></div>`;
-  let surface = "";
-  if (id === "earth")
-    surface =
-      '<path d="M32 48l18-16 22 6 2 16-17 7-5 21-12-8zm53 22l20-15 24 12-10 16-20 5-2 22-13 7-9-23z" fill="#80bca4"/><path d="M40 36q30-18 70 0M35 87q27-11 39-3M93 109l20-8" fill="none" stroke="#eef7e9aa" stroke-width="7"/>';
-  else if (["moon", "mercury"].includes(id))
-    surface = Array.from(
-      { length: 8 },
-      (_, i) =>
-        `<circle cx="${40 + ((i * 19) % 78)}" cy="${32 + ((i * 27) % 76)}" r="${4 + (i % 6)}" fill="#25354644" stroke="#e2e3d333" stroke-width="2"/>`,
-    ).join("");
-  else if (id === "mars")
-    surface =
-      '<path d="M30 55l28-14 27 9 6 25-26 17-27-9m44 12l21-23 24 2" fill="#763f384f"/><ellipse cx="80" cy="23" rx="16" ry="5" fill="#f0e1ce"/>';
-  else if (["jupiter", "saturn", "venus"].includes(id))
-    surface =
-      [37, 52, 68, 85, 99]
-        .map(
-          (y, i) =>
-            `<path d="M23 ${y}q30 ${i % 2 ? 12 : -8} 58 0t58 0" fill="none" stroke="${i % 2 ? "#835b4677" : "#f4dbb580"}" stroke-width="${i % 2 ? 9 : 5}"/>`,
-        )
-        .join("") +
-      (id === "jupiter" ? '<ellipse cx="100" cy="87" rx="15" ry="8" fill="#b6674d"/>' : "");
-  const rings = ["jupiter", "saturn", "uranus", "neptune"].includes(id);
-  return `<svg viewBox="0 0 160 140" role="img" aria-label="${b.name}"><defs><radialGradient id="${uid}"><stop stop-color="${b.color}"/><stop offset=".7" stop-color="${b.color}"/><stop offset="1" stop-color="#132638"/></radialGradient><clipPath id="${uid}-clip"><circle cx="80" cy="70" r="49"/></clipPath></defs>${rings ? `<ellipse cx="80" cy="72" rx="72" ry="${id === "uranus" ? 57 : 19}" transform="rotate(${id === "uranus" ? 75 : -19} 80 70)" fill="none" stroke="${b.color}" stroke-opacity="${id === "saturn" ? 0.7 : 0.3}" stroke-width="${id === "saturn" ? 10 : 2}"/>` : ""}<circle cx="80" cy="70" r="49" fill="url(#${uid})"/><g clip-path="url(#${uid}-clip)">${surface}</g>${id === "sun" ? '<circle cx="80" cy="70" r="54" fill="none" stroke="#efbc5755" stroke-width="5"/>' : ""}</svg>`;
+  return "";
 }
 const item = (id, label = "") =>
   `<div class="figure-object">${planetSVG(id)}<span>${label || bodyInfo(id).name}</span></div>`;
-export function galaxySVG() {
-  return `<svg viewBox="0 0 400 190" role="img" aria-label="太阳系位于银河系猎户臂示意"><g transform="translate(200 95) rotate(-18) scale(1 .47)"><ellipse rx="172" ry="145" fill="#62749f18"/>${[0, 90, 180, 270].map((a) => `<path transform="rotate(${a})" d="M0 0C85-60 166 12 108 115S-90 155-153 60" fill="none" stroke="#b0c4ec66" stroke-width="13"/>`).join("")}<ellipse rx="30" ry="45" fill="#edcc9388"/></g><circle cx="285" cy="113" r="5" fill="#a4f8dc"/><path d="M285 113l25 30h58" stroke="#b4efd6" fill="none"/><text x="280" y="164" fill="#d7eee9" font-size="12">太阳系 · 猎户臂</text></svg>`;
-}
+export const galaxySVG = milkyWayDiagram;
 export function cardFigure(id) {
+  const artwork = knowledgeFigure(id);
+  if (artwork) return artwork;
   let html = "";
   if ([1, 7, 22].includes(id))
     html = `<div class="planet-order">${PLANETS.map((p, i) => `<div class="${p === CARDS[id - 1].body ? "highlight" : ""}">${planetSVG(p)}<span>${i + 1} ${bodyInfo(p).name}</span></div>`).join("")}</div>`;
@@ -178,15 +143,6 @@ export function cardFigure(id) {
       '<span class="diagram-link">→</span>' +
       item("moon", "正面也有白天") +
       item("moon", "背面也有白天");
-  else if (id === 4)
-    html =
-      item("earth") +
-      '<span class="diagram-link">↔</span><div class="diagram-label">◈<br>鹊桥二号</div><span class="diagram-link">↔</span>' +
-      item("moon", "月背探测器");
-  else if (id === 5)
-    html =
-      '<div class="sample-container">◈<br><span>月背月壤样品</span><small>嫦娥六号 · 2024</small></div>';
-  else if (id === 6) html = item("sun", "太阳 · 恒星") + item("solar", "行星绕太阳运行");
   else if (id === 8)
     html =
       item("sun") +
@@ -194,43 +150,16 @@ export function cardFigure(id) {
       item("mercury");
   else if (id === 9) html = item("mercury", "更靠近太阳") + item("venus", "最热的行星");
   else if (id === 10) html = item("mercury", "无天然卫星") + item("venus", "无天然卫星");
-  else if (id === 11)
-    html =
-      item("mars") +
-      '<div class="soil-detail">氧化的铁矿物<br><small>红色地表 · 类似铁生锈</small></div>';
-  else if (id === 12)
-    html =
-      '<svg viewBox="0 0 260 130" aria-label="祝融号火星车与轮迹示意" role="img"><path d="M5 116h250M20 125h230" stroke="#a96c56" stroke-dasharray="5 8"/><path d="M74 70h100v24H74zM103 50h48v20h-48z" fill="#c9ba94"/><path d="M102 55H25l8 30h69m49-30h78l-8 30h-70" fill="#374c71" stroke="#97adce"/><path d="M138 50V25h18" stroke="#ccb997" stroke-width="5"/><circle cx="83" cy="100" r="12" fill="#72818b"/><circle cx="127" cy="100" r="12" fill="#72818b"/><circle cx="170" cy="100" r="12" fill="#72818b"/></svg><div class="diagram-label">祝融号<br><small>2021年5月22日</small></div>';
-  else if (id === 13)
-    html = item("moon", "火卫一 Phobos") + item("mars") + item("asteroids", "火卫二 Deimos");
   else if (id === 14) html = item("mars") + item("asteroids") + item("jupiter");
   else if (id === 15) html = item("asteroids", "形状不规则、分布稀疏");
   else if (id === 16)
     html = '<div class="size-earth">' + item("earth") + "</div>" + item("jupiter", "木星 · 最大");
-  else if (id === 17)
-    html =
-      item("jupiter") + '<div class="diagram-label">↖ 大红斑<br><small>巨大的风暴</small></div>';
-  else if (id === 18)
-    html =
-      item("jupiter") +
-      '<div class="diagram-label">◈ 观测节点<br><small>悬于云层外 · 不着陆</small></div>';
-  else if (id === 19)
-    html =
-      item("saturn") + '<span class="diagram-link">→</span>' + item("asteroids", "冰块与岩石碎片");
-  else if (id === 20)
-    html = ["jupiter", "saturn", "uranus", "neptune"].map((p) => item(p)).join("");
   else if (id === 21)
     html =
       '<div class="tilt-diagram">' +
       planetSVG("uranus") +
       "<i></i><span>自转轴倾角 ≈98°</span></div>";
   else if (id === 23) html = item("earth", "公转约1年") + item("neptune", "公转约165地球年");
-  else if (id === 24)
-    html =
-      item("neptune") +
-      '<span class="diagram-link">→</span>' +
-      item("kuiper") +
-      '<div class="diagram-label">冥王星<br><small>矮行星</small></div>';
   else html = galaxySVG();
   return `<div class="card-figure">${html}</div><small class="diagram-note">示意图 · 距离与大小未按比例</small>`;
 }

@@ -2,6 +2,8 @@ import {
   LEVELS as flightLevels,
   signalPool as flightPool,
   examples as flightExamples,
+  COLORS as flightColors,
+  COLOR_NAMES as flightColorNames,
 } from "./flight-levels.mjs";
 export const CHAPTERS = [
   {
@@ -41,14 +43,11 @@ export const CHAPTERS = [
   },
 ];
 export const COLORS = {
-  blue: "#53caff",
-  yellow: "#ffda78",
-  purple: "#b79aff",
-  green: "#8ee3b0",
-  red: "#ff858f",
-  orange: "#f7a65e",
+  ...flightColors,
+  orange: "#ffb45f",
 };
 export const COLOR_NAMES = {
+  ...flightColorNames,
   blue: "蓝色",
   yellow: "黄色",
   purple: "紫色",
@@ -64,180 +63,107 @@ export const SHAPE_NAMES = {
   diamond: "菱形",
   spark: "六边形",
 };
-export const signal = (color, shape, extra = {}) => ({
-  color,
-  shape,
-  halo: false,
-  solid: true,
-  direction: "up",
-  ...extra,
-});
-const S = signal;
-const shapes = ["circle", "triangle", "star"];
-const colors = ["blue", "yellow", "purple"];
-const blueTriangle = { color: "blue", shape: "triangle" };
-const standardDecoys = [S("blue", "circle"), S("blue", "square"), S("purple", "triangle")];
 const configs = [
   [
     "唤醒接收器",
-    "earth",
-    [{ color: "blue", shape: "circle" }],
-    [S("blue", "circle")],
-    [S("orange", "square"), S("purple", "star")],
+    "earth"
   ],
   [
     "接通月面信标",
-    "moon",
-    [{ color: "yellow", shape: "triangle" }],
-    [S("yellow", "triangle")],
-    [S("blue", "triangle"), S("yellow", "circle")],
+    "moon"
   ],
   [
     "寻找月背回音",
-    "moon",
-    [{ shape: "star" }],
-    colors.map((c) => S(c, "star")),
-    colors.flatMap((c) => ["circle", "square"].map((s) => S(c, s))),
+    "moon"
   ],
   [
     "搭起通信鹊桥",
-    "moon",
-    [{ color: "green" }],
-    shapes.map((s) => S("green", s)),
-    colors.flatMap((c) => shapes.map((s) => S(c, s))),
+    "moon"
   ],
   [
     "地月联网验收",
-    "earthmoon",
-    [blueTriangle],
-    [S("blue", "triangle")],
-    [S("blue", "circle"), S("green", "triangle")],
+    "earthmoon"
   ],
   [
     "接收日光观测",
-    "sun",
-    [{ shape: "circle", halo: true }],
-    colors.map((c) => S(c, "circle", { halo: true })),
-    colors.flatMap((c) => [S(c, "circle"), S(c, "square", { halo: true })]),
+    "sun"
   ],
   [
     "找准观测方向",
-    "mercury",
-    [{ shape: "triangle", direction: "up" }],
-    [S("blue", "triangle")],
-    ["left", "right", "down"].map((direction) => S("blue", "triangle", { direction })),
+    "mercury"
   ],
   [
     "守住陨坑上空",
-    "mercury",
-    [{ color: "purple", shape: "star" }],
-    [S("purple", "star")],
-    [S("blue", "star"), S("purple", "circle")],
+    "mercury"
   ],
   [
     "穿过厚云通信",
-    "venus",
-    [{ color: "blue", shape: "circle" }],
-    [S("blue", "circle")],
-    [S("blue", "square"), S("yellow", "circle")],
+    "venus"
   ],
   [
     "向阳观测验收",
-    "venus",
-    [blueTriangle],
-    [S("blue", "triangle")],
-    [S("blue", "circle"), S("purple", "triangle"), S("orange", "star")],
+    "venus"
   ],
   [
     "红色星球来信",
-    "mars",
-    [{ color: "blue", shape: "circle" }],
-    [S("blue", "circle")],
-    [S("blue", "square"), S("red", "circle")],
+    "mars"
   ],
   [
     "同步巡视数据",
-    "mars",
-    [{ color: "red", shape: "triangle" }],
-    [S("red", "triangle")],
-    [S("red", "circle"), S("blue", "triangle")],
+    "mars"
   ],
   [
     "辨认微小差别",
-    "mars",
-    [{ color: "purple", shape: "star" }],
-    [S("purple", "star")],
-    [S("purple", "circle"), S("blue", "star"), S("purple", "spark")],
+    "mars"
   ],
   [
     "打开左右扫描区",
-    "asteroids",
-    [{ color: "green", shape: "circle" }],
-    [S("green", "circle")],
-    [S("green", "triangle"), S("blue", "circle")],
+    "asteroids"
   ],
-  ["主小行星带验收", "asteroids", [blueTriangle], [S("blue", "triangle")], standardDecoys],
+  [
+    "主小行星带验收",
+    "asteroids"
+  ],
   [
     "恢复云带数据",
-    "jupiter",
-    [{ color: "yellow", halo: true }],
-    shapes.map((s) => S("yellow", s, { halo: true })),
-    shapes.flatMap((s) => [S("yellow", s), S("blue", s, { halo: true })]),
+    "jupiter"
   ],
   [
     "排除反向信号",
-    "jupiter",
-    [{ color: "blue", shape: "triangle", direction: "up" }],
-    [S("blue", "triangle")],
-    [
-      ...["left", "right", "down"].map((direction) => S("blue", "triangle", { direction })),
-      S("yellow", "triangle"),
-    ],
+    "jupiter"
   ],
   [
     "看清风暴轮廓",
-    "jupiter",
-    [{ color: "purple", shape: "circle", solid: true }],
-    [S("purple", "circle")],
-    [S("purple", "circle", { solid: false }), S("blue", "circle")],
+    "jupiter"
   ],
   [
     "等待久违的信号",
-    "saturn",
-    [{ color: "green", shape: "star" }],
-    [S("green", "star")],
-    [S("green", "circle"), S("purple", "star")],
+    "saturn"
   ],
-  ["巨行星观测验收", "saturn", [blueTriangle], [S("blue", "triangle")], standardDecoys],
+  [
+    "巨行星观测验收",
+    "saturn"
+  ],
   [
     "接收双路报告",
-    "uranus",
-    [blueTriangle, { color: "yellow", shape: "circle" }],
-    [S("blue", "triangle"), S("yellow", "circle")],
-    [S("blue", "circle"), S("yellow", "triangle"), S("purple", "star")],
+    "uranus"
   ],
   [
     "连接三座接收器",
-    "neptune",
-    [{ color: "purple", shape: "star" }],
-    [S("purple", "star")],
-    [S("purple", "circle"), S("blue", "star")],
+    "neptune"
   ],
   [
     "核对远端方向",
-    "neptune",
-    [{ color: "blue", shape: "triangle", direction: "up" }],
-    [S("blue", "triangle")],
-    ["left", "right", "down"].map((direction) => S("blue", "triangle", { direction })),
+    "neptune"
   ],
   [
     "追踪远方数据",
-    "kuiper",
-    [{ color: "green", shape: "circle" }],
-    [S("green", "circle")],
-    [S("green", "square"), S("blue", "circle")],
+    "kuiper"
   ],
-  ["太阳系全网验收", "solar", [blueTriangle], [S("blue", "triangle")], standardDecoys],
+  [
+    "太阳系全网验收",
+    "solar"
+  ]
 ];
 export const LEVELS = configs.map(([name, body], i) => ({
   ...flightLevels[i],

@@ -41,13 +41,13 @@ export const CHAPTERS = [
   },
 ];
 export const COLORS = {
-  blue: "#53caff",
-  yellow: "#ffda78",
-  purple: "#b79aff",
-  green: "#8ee3b0",
-  red: "#ff858f",
-  cyan: "#64e3eb",
-  lilac: "#e9b3eb",
+  blue: "#80aaff",
+  yellow: "#fff078",
+  purple: "#be8cff",
+  green: "#b4f56b",
+  red: "#ff8093",
+  cyan: "#45ffda",
+  lilac: "#ffc0ef",
 };
 export const COLOR_NAMES = {
   blue: "蓝色",

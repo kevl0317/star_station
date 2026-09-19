@@ -1,0 +1,88 @@
+{
+  "regolith": {
+    "file": "change6-regolith.jpg",
+    "label": "嫦娥六号带回的月背月壤",
+    "type": "实验室实拍",
+    "credit": "Chunlai Li、Hao Hu、Meng-Fei Yang",
+    "url": "https://doi.org/10.1093/nsr/nwae328",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "rover": {
+    "file": "zhurong.jpg",
+    "label": "祝融号与着陆平台合影",
+    "type": "火星实拍",
+    "credit": "国家航天局供图 · 新华社发布",
+    "url": "https://www.ncsti.gov.cn/kjdt/ztbd/tianwenyihao/tianwenyihaoSK/202106/t20210611_34220.html"
+  },
+  "mars": {
+    "file": "mars-surface.jpg",
+    "label": "祝融号拍摄的火星地表",
+    "type": "火星实拍",
+    "credit": "国家航天局供图 · 新华社发布",
+    "url": "https://www.ncsti.gov.cn/kjdt/ztbd/tianwenyihao/tianwenyihaoSK/202106/t20210611_34220.html"
+  },
+  "phobos": {
+    "file": "phobos.jpg",
+    "label": "火卫一 · Phobos",
+    "type": "轨道器影像 · 多波段合成",
+    "credit": "NASA / JPL-Caltech / University of Arizona",
+    "url": "https://science.nasa.gov/resource/martian-moon-phobos/"
+  },
+  "deimos": {
+    "file": "deimos.jpg",
+    "label": "火卫二 · Deimos（两个视角）",
+    "type": "轨道器影像 · 增强色",
+    "credit": "NASA / JPL-Caltech / University of Arizona",
+    "url": "https://science.nasa.gov/resource/martian-moon-deimos-in-high-resolution/"
+  },
+  "storm": {
+    "file": "great-red-spot.jpg",
+    "label": "大红斑：木星云层中的巨大风暴",
+    "type": "朱诺号影像 · 增强色",
+    "credit": "NASA / JPL-Caltech / SwRI / MSSS · Kevin M. Gill（CC BY）",
+    "url": "https://science.nasa.gov/photojournal/the-great-red-spot/"
+  },
+  "clouds": {
+    "file": "jupiter-clouds.jpg",
+    "label": "木星翻涌的云层",
+    "type": "朱诺号影像 · 增强色",
+    "credit": "NASA / JPL-Caltech / SwRI / MSSS · Sergey Dushkin",
+    "url": "https://science.nasa.gov/photojournal/juno-captures-jupiter-cloudscape-in-high-resolution/"
+  },
+  "rings": {
+    "file": "rings.jpg",
+    "label": "卡西尼号拍摄的土星 A 环局部",
+    "type": "探测器实拍",
+    "credit": "NASA / JPL / Space Science Institute",
+    "url": "https://science.nasa.gov/photojournal/propeller-swarm/"
+  },
+  "pluto": {
+    "file": "pluto.jpg",
+    "label": "冥王星 · 柯伊伯带中的矮行星",
+    "type": "新视野号影像 · 近自然色",
+    "credit": "NASA / JHUAPL / SwRI / Alex Parker",
+    "url": "https://science.nasa.gov/resource/true-colors-of-pluto/"
+  },
+  "milkyWay": {
+    "file": "milky-way.jpg",
+    "reference": "milky-way-annotated.jpg",
+    "credit": "NASA/JPL-Caltech",
+    "type": "科学示意图（非外部实拍）",
+    "url": "https://science.nasa.gov/photojournal/our-milky-way-gets-a-makeover-artist-concept/",
+    "changes": "源图等比缩小至1400像素，网页叠加中文标注；太阳位置依据官方标注版。"
+  },
+  "relay": {
+    "file": "queqiao2-render.png",
+    "label": "鹊桥二号中继星",
+    "type": "官方效果图 · 非实拍",
+    "credit": "中国空间技术研究院 / 国家航天局",
+    "url": "https://www.cnsa.gov.cn/n6758968/n6758973/c10539860/content.html"
+  },
+  "lander": {
+    "file": "change6-lander.jpg",
+    "label": "嫦娥六号着陆器与上升器",
+    "type": "月背实拍 · 2024年6月3日",
+    "credit": "国家航天局",
+    "url": "https://www.cnsa.gov.cn/n6758823/n6758838/c10543444/content.html"
+  }
+}

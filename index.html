@@ -9,7 +9,7 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath fill='%238bd9ed' d='M20 2L25 15L39 20L25 25L20 38L15 25L1 20L15 15Z'/%3E%3C/svg%3E"
     />
-    <link rel="preload" as="image" href="./assets/galaxy.webp" />
+    <link rel="preload" as="image" href="./assets/galaxy-pastel.png" />
     <link rel="preload" as="image" href="./assets/signal-occluder.webp" />
     <link rel="stylesheet" href="./src/style.css" />
     <link rel="stylesheet" href="./src/solar.css" />
@@ -62,20 +62,6 @@
         </div>
       </section>
 
-      <section class="screen map-screen" id="map-screen" hidden aria-label="太阳系星图">
-        <div class="screen-title">
-          <button class="icon-button" data-action="home" aria-label="返回首页">←</button>
-          <div>
-            <span class="overline">星网重联</span>
-            <h2>太阳系星图</h2>
-          </div>
-          <div id="map-progress" class="map-progress"></div>
-        </div>
-        <div id="map-solar" class="map-solar"></div>
-        <div id="chapter-map" class="chapter-map"></div>
-        <div id="map-badges" class="map-badges"></div>
-      </section>
-
       <section class="screen atlas-screen" id="atlas-screen" hidden aria-label="星图图鉴">
         <div class="screen-title">
           <button class="icon-button" data-action="home" aria-label="返回首页">←</button>
@@ -91,7 +77,7 @@
       </section>
 
       <section class="screen briefing-screen" id="briefing-screen" hidden aria-label="关前规则">
-        <button class="back-button" data-action="map">← 航线</button>
+        <button class="back-button" data-action="home">← 返回主页</button>
         <div class="briefing-layout">
           <div class="briefing-art">
             <div id="briefing-tower"></div>
@@ -171,7 +157,7 @@
             </div>
           </div>
           <div class="result-buttons">
-            <button class="action-button outline" data-action="map">返回航线</button
+            <button class="action-button outline" data-action="home">返回主页</button
             ><button class="action-button outline" data-action="retry">重试</button
             ><button id="next" class="action-button gold">继续 <b>➜</b></button>
           </div>
@@ -194,6 +180,7 @@
           </div>
         </div>
       </section>
+      <section class="screen ending-screen" id="ending-screen" hidden aria-label="旅程完成"></section>
       <div id="toast" class="toast" role="status"></div>
       <div id="storage-note" class="storage-note" hidden>进度暂时无法保存</div>
     </main>

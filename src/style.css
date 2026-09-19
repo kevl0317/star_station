@@ -260,53 +260,6 @@ h1 span {
   margin-top: 18px;
   padding-left: 3px;
 }
-.hero-ship {
-  position: absolute;
-  left: 40%;
-  top: 15%;
-  width: 59%;
-  height: 66%;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-}
-.hero-ship img {
-  width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 35px 30px #0008);
-  animation: hover-ship 8s ease-in-out infinite;
-  transform: rotate(-7deg);
-}
-.ship-orbit {
-  position: absolute;
-  width: 69%;
-  height: 43%;
-  border: 1px solid #6dcbf022;
-  border-radius: 50%;
-  transform: rotate(-24deg);
-  box-shadow:
-    0 0 70px #45c9f510,
-    inset 0 0 70px #45c9f508;
-}
-.hero-ship-caption {
-  position: absolute;
-  bottom: 0;
-  left: 46%;
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: #a6c5d3;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.hero-ship-caption i {
-  width: 5px;
-  height: 5px;
-  background: #77e4de;
-  border-radius: 50%;
-  box-shadow: 0 0 9px #77e4de;
-}
 .companion {
   position: absolute;
   bottom: 113px;
@@ -389,10 +342,6 @@ h1 span {
   height: 100%;
   overflow: visible;
 }
-.map-screen {
-  padding: 116px 5% 30px;
-  background: #06132050;
-}
 .screen-title {
   display: flex;
   align-items: center;
@@ -407,155 +356,6 @@ h1 span {
 }
 .screen-title .overline {
   font-size: 9px;
-}
-.map-progress {
-  margin-left: auto;
-  font-size: 12px;
-  color: #9abac9;
-}
-.chapter-map {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 26px;
-  height: calc(100% - 124px);
-  min-height: 360px;
-}
-.map-chapter {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  position: relative;
-  min-width: 0;
-}
-.map-chapter h3 {
-  font-size: 16px;
-  letter-spacing: 2px;
-  font-weight: 400;
-  margin: 14px 0 8px;
-  color: var(--local);
-}
-.chapter-planet {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 24%, var(--local), #163049 65%, #051019 90%);
-  box-shadow: -2px -2px 15px color-mix(in srgb, var(--local) 25%, transparent);
-  position: relative;
-}
-.chapter-planet:after {
-  content: "";
-  position: absolute;
-  inset: 14px -16px;
-  border: 1px solid color-mix(in srgb, var(--local) 30%, transparent);
-  border-radius: 50%;
-  transform: rotate(-25deg);
-}
-.chapter-nodes {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
-  width: 100%;
-  height: calc(100% - 112px);
-  min-height: 260px;
-}
-.chapter-nodes:before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  height: 90%;
-  border-left: 1px dashed #87bedc37;
-}
-.level-node {
-  position: relative;
-  border: 1px solid #557286;
-  background: #102638e0;
-  color: #9fbfce;
-  border-radius: 50%;
-  width: 47px;
-  height: 47px;
-  flex-shrink: 0;
-  font:
-    17px Consolas,
-    monospace;
-  box-shadow: 0 0 0 6px #071727a0;
-  transition: box-shadow 0.2s;
-}
-.level-node:nth-child(odd) {
-  transform: translateX(-19px);
-}
-.level-node:nth-child(even) {
-  transform: translateX(19px);
-}
-.level-node:disabled {
-  opacity: 0.36;
-}
-.level-node.passed {
-  color: #f4dcad;
-  border-color: #d7b67a;
-  background: #39402dd9;
-}
-.level-node.current {
-  color: #f2fbff;
-  border-color: #b5efff;
-  background: #1c5367;
-  box-shadow:
-    0 0 0 6px #6eb9e91a,
-    0 0 28px #6cc7e455;
-}
-.level-node.checkpoint {
-  border-radius: 12px;
-  transform: translateX(-19px) rotate(0deg);
-  border-width: 2px;
-}
-.node-stars {
-  position: absolute;
-  bottom: -14px;
-  font: 8px sans-serif;
-  letter-spacing: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #f3c97e;
-  white-space: nowrap;
-}
-.chapter-nodes .level-node:before {
-  content: attr(data-name);
-  position: absolute;
-  font:
-    9px "Microsoft YaHei",
-    sans-serif;
-  left: calc(100% + 12px);
-  top: 50%;
-  transform: translateY(-50%);
-  width: 80px;
-  text-align: left;
-  color: #a3bfcc;
-  letter-spacing: 0;
-}
-.chapter-nodes .level-node:nth-child(even):before {
-  left: auto;
-  right: calc(100% + 12px);
-  text-align: right;
-}
-.map-chapter .map-tower {
-  position: absolute;
-  width: 46px;
-  height: 60px;
-  right: 0;
-  top: 0;
-  opacity: 0.7;
-}
-.map-badges {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-top: 22px;
-  font-size: 10px;
-  color: #7f9eac;
-}
-.map-badges span.earned {
-  color: #efd2a0;
 }
 .back-button {
   position: absolute;
@@ -877,10 +677,6 @@ h1 span {
   background: var(--chapter);
   box-shadow: 0 0 9px color-mix(in srgb, var(--chapter) 60%, transparent);
 }
-.repair-segments i.pending {
-  border-color: var(--chapter);
-  animation: pending 2s infinite;
-}
 .live-count {
   display: flex;
   align-items: baseline;
@@ -978,8 +774,7 @@ h1 span {
   background: radial-gradient(ellipse, #081e2b35, #030b16a0);
 }
 #game-root[data-screen="briefing"] .space-backdrop,
-#game-root[data-screen="result"] .space-backdrop,
-#game-root[data-screen="map"] .space-backdrop {
+#game-root[data-screen="result"] .space-backdrop{
   filter: brightness(0.6);
 }
 .result-screen {
@@ -1406,11 +1201,6 @@ dialog .action-button {
   .hero-actions {
     width: 280px;
   }
-  .hero-ship {
-    left: 40%;
-    top: 13%;
-    width: 58%;
-  }
   .home-bottom {
     bottom: 35px;
   }
@@ -1424,14 +1214,6 @@ dialog .action-button {
   .briefing-art > div:first-child {
     height: 370px;
     width: 280px;
-  }
-  .level-node {
-    width: 53px;
-    height: 53px;
-  }
-  .chapter-nodes .level-node:before {
-    font-size: 11px;
-    width: 100px;
   }
   .result-content {
     margin-top: 130px;
@@ -1475,34 +1257,8 @@ dialog .action-button {
     width: 90px;
     bottom: 105px;
   }
-  .map-screen {
-    padding-top: 90px;
-  }
-  .chapter-map {
-    height: calc(100% - 100px);
-    min-height: 300px;
-  }
-  .chapter-nodes {
-    min-height: 210px;
-  }
-  .level-node {
-    width: 37px;
-    height: 37px;
-    font-size: 14px;
-  }
-  .node-stars {
-    bottom: -12px;
-    font-size: 7px;
-  }
-  .map-badges {
-    margin-top: 12px;
-  }
   .screen-title {
     margin-bottom: 15px;
-  }
-  .chapter-planet {
-    width: 34px;
-    height: 34px;
   }
   .briefing-layout {
     margin-top: 90px;
@@ -1568,17 +1324,6 @@ dialog .action-button {
   .home-tower span {
     font-size: 8px;
   }
-  .chapter-map {
-    gap: 15px;
-  }
-  .chapter-nodes .level-node:before {
-    font-size: 8px;
-    width: 56px;
-    left: calc(100% + 7px);
-  }
-  .chapter-nodes .level-node:nth-child(even):before {
-    right: calc(100% + 7px);
-  }
   .briefing-layout {
     gap: 35px;
   }
@@ -1618,13 +1363,6 @@ dialog .action-button {
   }
   h1 {
     font-size: clamp(54px, 9vw, 76px);
-  }
-  .hero-ship {
-    width: 67%;
-    left: 34%;
-    top: 18%;
-    height: 55%;
-    opacity: 0.86;
   }
   .hero-copy p {
     font-size: 12px;
@@ -1672,30 +1410,12 @@ dialog .action-button {
     bottom: 108px;
     right: 5%;
   }
-  .map-screen {
-    padding: 95px 4% 25px;
-    overflow: auto;
-  }
-  .chapter-map {
-    min-width: 780px;
-    gap: 20px;
-    min-height: 450px;
-    height: calc(100dvh - 240px);
-  }
-  .map-badges {
-    min-width: 650px;
-    justify-content: space-around;
-    font-size: 9px;
-  }
   .screen-title {
     position: sticky;
     left: 0;
   }
   .screen-title h2 {
     font-size: 23px;
-  }
-  .map-progress {
-    font-size: 10px;
   }
   .briefing-layout {
     width: 90%;
@@ -1816,19 +1536,6 @@ dialog .action-button {
   .hero-actions {
     width: 192px;
   }
-  .hero-ship {
-    top: 34%;
-    left: 35%;
-    width: 79%;
-    height: 42%;
-    opacity: 0.85;
-  }
-  .hero-ship img {
-    transform: rotate(-20deg);
-  }
-  .hero-ship-caption {
-    display: none;
-  }
   .hero-copy {
     z-index: 5;
   }
@@ -1877,9 +1584,6 @@ dialog .action-button {
     padding: 0;
     margin-top: -4px;
   }
-  .map-screen {
-    padding-top: 85px;
-  }
   .screen-title {
     margin-bottom: 26px;
   }
@@ -1888,26 +1592,6 @@ dialog .action-button {
   }
   .screen-title .overline {
     display: none;
-  }
-  .chapter-map {
-    min-height: 390px;
-    min-width: 800px;
-    height: calc(100dvh - 225px);
-    gap: 20px;
-  }
-  .map-chapter h3 {
-    font-size: 13px;
-  }
-  .map-progress {
-    font-size: 9px;
-    margin-right: 3px;
-  }
-  .chapter-nodes .level-node:before {
-    font-size: 8px;
-    max-width: 60px;
-  }
-  .map-badges {
-    margin-top: 18px;
   }
   .briefing-screen {
     overflow: auto;
@@ -2205,11 +1889,6 @@ dialog .action-button {
   }
   .hero-actions .action-button {
     min-height: 42px;
-  }
-  .hero-ship {
-    top: 31%;
-    left: 39%;
-    width: 70%;
   }
   .companion {
     bottom: 105px;

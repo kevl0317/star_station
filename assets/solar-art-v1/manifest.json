@@ -3,52 +3,56 @@
     {
       "id": "sun",
       "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-c9ee3e56-e0a9-4e8d-8d5d-30c4eeeb8a9b.png",
-      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. The Sun, a single glowing golden-orange stellar sphere, fine roiling plasma texture, restrained short prominences hugging edge, no enormous flares, no face. Fully contained."
+      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. The Sun, a single glowing golden-orange stellar sphere, fine roiling plasma texture, restrained short prominences hugging edge, no enormous flares, no face. Fully contained.",
+      "activeAsset": "sun.webp"
     },
     {
       "id": "mercury",
       "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-3fd2b4a3-2b37-42ba-b199-cb090445cb98.png",
-      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Mercury, a single gray-brown rocky planet with densely cratered terrain, no atmosphere, no rings."
+      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Mercury, a single gray-brown rocky planet with densely cratered terrain, no atmosphere, no rings.",
+      "activeAsset": "mercury.webp"
     },
     {
       "id": "venus",
       "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-154761d9-1a57-4337-a139-553564779510.png",
-      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Venus, a single warm pale ochre planet completely enveloped in dense creamy yellow swirling clouds, no visible ground, no rings."
+      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Venus, a single warm pale ochre planet completely enveloped in dense creamy yellow swirling clouds, no visible ground, no rings.",
+      "activeAsset": "venus.webp"
     },
     {
       "id": "earth",
       "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-c744c9ab-cdd4-4c9e-884a-e4acd53a30f2.png",
-      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Earth, spherical blue oceans, recognizable Africa and Eurasia, green-brown continents, delicate white swirling clouds and thin blue atmosphere. Scientifically recognizable planet, not a face."
+      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Earth, spherical blue oceans, recognizable Africa and Eurasia, green-brown continents, delicate white swirling clouds and thin blue atmosphere. Scientifically recognizable planet, not a face.",
+      "activeAsset": "earth.webp"
     },
     {
       "id": "moon",
       "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-8f75ab81-56f0-4022-8f28-ffd60fa527ae.png",
-      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Earth’s Moon, a single silvery gray cratered sphere with recognizable broad dark lunar maria, no atmosphere, no rings."
+      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Earth’s Moon, a single silvery gray cratered sphere with recognizable broad dark lunar maria, no atmosphere, no rings.",
+      "activeAsset": "moon.webp"
     },
     {
       "id": "mars",
       "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-165a28ff-9dfe-4e6f-a2a2-58a4e8b5af18.png",
-      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Mars, a single rust-red rocky planet with darker basalt regions, a small pale polar cap, subtle canyon features, no rings, no vegetation."
+      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Mars, a single rust-red rocky planet with darker basalt regions, a small pale polar cap, subtle canyon features, no rings, no vegetation.",
+      "activeAsset": "mars.webp"
     },
     {
       "id": "jupiter",
       "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-9cb73a60-6657-47fc-93a3-63a4fd810d69.png",
-      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Jupiter, a single cream and warm brown gas giant with horizontal turbulent cloud bands and a clear oval Great Red Spot in the southern hemisphere. No solid surface or land. Very subtle fine dark ring only if visible; avoid Saturn-like large rings."
-    },
-    {
-      "id": "bunny",
-      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-98bf796d-65b1-4818-b971-ad45203eb524.png",
-      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. A charming rabbit-shaped astronaut robot companion named Xing Xiaotu, full body front three-quarter view. Two long upright rabbit ears with muted coral inner panels, pearl-white ceramic shell, rounded midnight-teal face screen with two expressive cyan eye lights and a tiny friendly smile. Small mitten hands, short boots, subtle Chinese cloud-scroll ornament engraved on torso, pale gold joints, small teal chest light. Friendly capable explorer, premium game character rather than toy product photograph. No pedestal."
+      "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Jupiter, a single cream and warm brown gas giant with horizontal turbulent cloud bands and a clear oval Great Red Spot in the southern hemisphere. No solid surface or land. Very subtle fine dark ring only if visible; avoid Saturn-like large rings.",
+      "activeAsset": "jupiter.webp"
     },
     {
       "id": "saturn",
       "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Saturn, a single pale golden gas giant with subtle horizontal cloud bands and a magnificent thin broad ring system tilted diagonally, visible dark Cassini gap, rings go correctly behind and in front of the globe. Entire rings contained with margin, not cropped.",
-      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-e2bf3328-3542-4935-91bd-686161dac3e7.png"
+      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-e2bf3328-3542-4935-91bd-686161dac3e7.png",
+      "activeAsset": "saturn.webp"
     },
     {
       "id": "uranus",
       "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. Uranus, a single pale cyan ice giant, smooth subtle blue-green cloud haze, faint thin dark rings viewed nearly vertical to suggest its strongly tilted axis. No land, no craters. Entire rings contained.",
-      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-6b974336-3713-4829-a872-47fb901cef5e.png"
+      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-6b974336-3713-4829-a872-47fb901cef5e.png",
+      "activeAsset": "uranus.webp"
     },
     {
       "id": "neptune",
@@ -60,13 +64,19 @@
     {
       "id": "asteroids",
       "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. An isolated elliptical orbital belt composed of many irregular rocky asteroids separated by generous empty space. Oblique view, warm charcoal and gray-brown cratered rocks, several larger readable rocks in foreground and smaller distant rocks behind, transparent empty central hole. This is an educational main asteroid belt icon, sparse distinct floating rocks NOT a solid ring wall, no central planet or sun, no gas or fog. Entire belt fits within frame.",
-      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-f8352d55-9aa1-4b78-9568-a1451bc62fab.png"
+      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-f8352d55-9aa1-4b78-9568-a1451bc62fab.png",
+      "activeAsset": "asteroids.webp"
     },
     {
       "id": "kuiper",
       "prompt": "Use case: stylized-concept. Asset type: polished educational space adventure game sprite. Hand-painted 3D illustration, restrained rich natural colors, finely textured surface, crisp silhouette, soft upper-left lighting and deep blue shadow, readable as a small game icon. One isolated subject centered with 12% clear margin, genuine transparent alpha background, no stars, no scenery, no text, no labels, no border, no watermark. An isolated wide elliptical orbital belt composed of sparse icy minor bodies and irregular frozen rocks separated by generous empty space. Oblique view, cold slate-blue and icy pale lavender bodies, several readable larger frozen rocks in foreground and smaller behind, transparent empty central hole. An educational Kuiper belt icon, no central planet or sun, no fog, no continuous solid ring. Entire belt fits within frame.",
-      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-bb7d69cc-0da2-403f-92eb-0c3b4a41d330.png"
+      "path": "C:\\Users\\24510\\.codex\\generated_images\\01a09c8f-e3f8-7241-a555-33359dd191c5\\exec-bb7d69cc-0da2-403f-92eb-0c3b4a41d330.png",
+      "activeAsset": "kuiper.webp"
+    },
+    {
+      "id": "bunny",
+      "activeAsset": "bunny-white-moon.png",
+      "description": "当前白兔立绘，月牙项链；编辑说明见 ART.md"
     }
-  ],
-  "pending": []
+  ]
 }
