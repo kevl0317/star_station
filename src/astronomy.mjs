@@ -166,8 +166,8 @@ export function cardFigure(id) {
 export function cardHTML(id, { narrated = false } = {}) {
   const c = CARDS[id - 1];
   const explanation = narrated
-    ? `<div class="bunny-lesson"><div class="bunny-lesson-art">${bunnySVG}</div><div class="bunny-speech"><strong>星小兔</strong><p>${c.text}</p></div></div>`
+    ? `<div class="bunny-lesson"><div class="bunny-lesson-art">${bunnySVG}</div><div class="bunny-speech"><p>${c.text}</p></div></div>`
     : `<p>${c.text}</p>`;
   return `<article class="knowledge-card"><div class="card-heading"><span>${c.code} · ${c.kind}</span><strong>${c.title}</strong></div>${cardFigure(id)}${explanation}<footer>${c.sources.map(([name, url]) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${name} ↗</a>`).join("")}</footer></article>`;
 }
-export const bunnySVG = `<svg class="bunny-art" viewBox="0 0 1145 1374" role="img" aria-label="星小兔"><image href="./assets/solar-art-v1/bunny-white-moon.png" width="1145" height="1374" preserveAspectRatio="xMidYMid meet"/></svg>`;
+export const bunnySVG = `<svg class="bunny-art" viewBox="0 0 1145 1374" role="img" aria-label="白兔向导"><image href="./assets/solar-art-v1/bunny-white-moon.png" width="1145" height="1374" preserveAspectRatio="xMidYMid meet"/></svg>`;

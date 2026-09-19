@@ -821,7 +821,7 @@ function frame(now) {
   if (now > toastUntil) $("toast").classList.remove("visible");
   requestAnimationFrame(frame);
 }
-$("home-companion").innerHTML = bunnySVG + '<span class="bunny-name">星小兔</span>';
+$("home-companion").innerHTML = bunnySVG;
 $("fullscreen").innerHTML = icon("fullscreen");
 $("settings").innerHTML = icon("settings");
 $("pause").innerHTML = icon("pause");

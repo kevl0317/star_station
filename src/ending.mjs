@@ -8,7 +8,6 @@ export function endingHTML(save) {
     <h1>每一份信号，<br>都有了回响。</h1>
     <div class="ending-solar">${planetSVG('solar')}</div>
     <div class="ending-farewell"><div class="ending-bunny">${bunnySVG}</div><div>
-      <span class="ending-speaker">星小兔</span>
       <p>从地球出发，一直到遥远的太阳系边缘，<br>谢谢你接住每一份来自星空的问候。</p>
       <p>25 个观测节点，全部接通！<br>这段旅程结束了，对宇宙的好奇，才刚刚开始。</p>
     </div></div>

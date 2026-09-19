@@ -10,7 +10,7 @@ export const CHAPTERS = [
     name: "地月启航",
     tower: "地月节点",
     color: "#85dce9",
-    line: "与星小兔一起，唤醒地月观测网",
+    line: "一起唤醒地月观测网",
     badge: "地月通信章",
   },
   {
