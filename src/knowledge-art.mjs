@@ -1,4 +1,4 @@
-// Photos retain their original colors and framing. Credits travel with each figure.
+// Source metadata is retained for project reference, not shown in the game UI.
 const cnsaPage = 'https://www.ncsti.gov.cn/kjdt/ztbd/tianwenyihao/tianwenyihaoSK/202106/t20210611_34220.html';
 export const KNOWLEDGE_PHOTOS = {
   relay: { file: 'queqiao2-render.png', label: '鹊桥二号中继星', type: '官方效果图 · 非实拍', credit: '中国空间技术研究院 / 国家航天局', url: 'https://www.cnsa.gov.cn/n6758968/n6758973/c10539860/content.html' },
@@ -15,15 +15,16 @@ export const KNOWLEDGE_PHOTOS = {
 };
 function photo(key) {
   const p = KNOWLEDGE_PHOTOS[key];
-  return `<figure class="knowledge-photo"><button type="button" class="photo-original" data-photo-src="./assets/knowledge/${p.file}" data-photo-title="${p.label}" aria-label="查看大图：${p.label}"><img src="./assets/knowledge/${p.file}" alt="${p.label}" loading="lazy" decoding="async"></button><figcaption><strong>${p.label}</strong><span>${p.type}</span><a href="${p.url}" target="_blank" rel="noopener noreferrer">${p.credit} ↗</a>${p.license ? `<a href="${p.license}" target="_blank" rel="noopener noreferrer">CC BY 4.0 · 原图未修改</a>` : ''}</figcaption></figure>`;
+  const mission = {storm: "朱诺号影像", clouds: "朱诺号影像", pluto: "新视野号影像"}[key];
+  return `<figure class="knowledge-photo"><button type="button" class="photo-original" data-photo-src="./assets/knowledge/${p.file}" data-photo-title="${p.label}" aria-label="查看大图：${p.label}"><img src="./assets/knowledge/${p.file}" alt="${p.label}" loading="lazy" decoding="async"></button><figcaption><strong>${p.label}</strong>${mission ? `<span class="photo-mission">${mission}</span>` : ""}</figcaption></figure>`;
 }
-const illustration = (html, note = '示意图 · 距离与大小未按比例') => `<div class="card-figure knowledge-illustration">${html}</div><small class="diagram-note">${note}</small>`;
+const illustration = (html) => `<div class="card-figure knowledge-illustration">${html}</div>`;
 const svg = (label, html, viewBox = '0 0 600 260') => `<svg class="learning-diagram" viewBox="${viewBox}" role="img" aria-label="${label}" xmlns="http://www.w3.org/2000/svg">${html}</svg>`;
 const body = (id, x, y, size) => `<image href="./assets/solar-art-v1/${id}.webp" x="${x}" y="${y}" width="${size}" height="${size}"/>`;
 const label = (x, y, text, color = '#e6eff0', size = 15) => `<text x="${x}" y="${y}" fill="${color}" font-size="${size}" text-anchor="middle">${text}</text>`;
 
 function relayDiagram() {
-  return `<div class="relay-photos">${photo('relay')}${photo('lander')}</div>` + illustration(svg('地球与月背的嫦娥六号经鹊桥二号中继通信', `${body('earth',0,12,66)}<path d="M94 42h111m177 0h110" fill="none" stroke="#e8cf94" stroke-width="2"/><path d="M94 42l8-5m-8 5 8 5m103-5-8-5m8 5-8 5M382 42l8-5m-8 5 8 5m110-5-8-5m8 5-8 5" fill="none" stroke="#e8cf94" stroke-width="2"/>${label(33,99,'地球', '#e6eff0',14)}${label(294,46,'鹊桥二号','#f3d493',20)}${label(294,78,'中继通信','#abc7d4',14)}${body('moon',507,6,77)}${label(548,99,'月球背面','#e6eff0',13)}`, '0 0 600 115'), '通信关系示意 · 位置与大小未按比例');
+  return `<div class="relay-photos">${photo('relay')}${photo('lander')}</div>` + illustration(svg('地球与月背的嫦娥六号经鹊桥二号中继通信', `${body('earth',0,12,66)}<path d="M94 42h111m177 0h110" fill="none" stroke="#e8cf94" stroke-width="2"/><path d="M94 42l8-5m-8 5 8 5m103-5-8-5m8 5-8 5M382 42l8-5m-8 5 8 5m110-5-8-5m8 5-8 5" fill="none" stroke="#e8cf94" stroke-width="2"/>${label(33,99,'地球', '#e6eff0',14)}${label(294,46,'鹊桥二号','#f3d493',20)}${label(294,78,'中继通信','#abc7d4',14)}${body('moon',507,6,77)}${label(548,99,'月球背面','#e6eff0',13)}`, '0 0 600 115'));
 }
 
 export function solarOrbitDiagram({ showLabels = true } = {}) {
@@ -34,17 +35,17 @@ export function solarOrbitDiagram({ showLabels = true } = {}) {
 
 export function milkyWayDiagram() {
   // Sun position follows the official PIA10748 annotated version (700, 968 at 1400px).
-  return `<svg class="learning-diagram galaxy-diagram" viewBox="0 0 1400 1400" role="img" aria-label="NASA 银河系科学示意图，标出太阳系在猎户臂的位置"><image href="./assets/knowledge/milky-way.jpg" width="1400" height="1400"/><circle cx="700" cy="968" r="18" fill="#fff0a1" stroke="#2a2017" stroke-width="5"/><circle cx="700" cy="968" r="35" fill="none" stroke="#ffe5a0" stroke-width="5"/><path d="M729 986L922 1110h330" fill="none" stroke="#ffe5a0" stroke-width="5"/><text x="1040" y="1173" fill="#fff0bc" stroke="#080d19" stroke-width="9" paint-order="stroke fill" font-size="54" text-anchor="middle">太阳系 · 猎户臂</text></svg>`;
+  return `<svg class="learning-diagram galaxy-diagram" viewBox="0 0 1400 1400" role="img" aria-label="银河系示意图，标出太阳系在猎户臂的位置"><image href="./assets/knowledge/milky-way.jpg" width="1400" height="1400"/><circle cx="700" cy="968" r="18" fill="#fff0a1" stroke="#2a2017" stroke-width="5"/><circle cx="700" cy="968" r="35" fill="none" stroke="#ffe5a0" stroke-width="5"/><path d="M729 986L922 1110h330" fill="none" stroke="#ffe5a0" stroke-width="5"/><text x="1040" y="1173" fill="#fff0bc" stroke="#080d19" stroke-width="9" paint-order="stroke fill" font-size="54" text-anchor="middle">太阳系 · 猎户臂</text></svg>`;
 }
 
 export function knowledgeFigure(id) {
   if (id === 20) return illustration(svg('四颗巨行星都有行星环', ['jupiter','saturn','uranus','neptune-ringless'].map((id,i)=>{
     const x=75+i*150;
     return `${body(id,x-57,55,114)}${[0,3].includes(i)?`<ellipse cx="${x}" cy="113" rx="64" ry="17" fill="none" stroke="#d8e9f5" stroke-width="2" transform="rotate(-18 ${x} 113)"/>`:''}${label(x,205,['木星','土星','天王星','海王星'][i])}`;
-  }).join('')), '行星环示意 · 暗弱的环已突出显示，大小未按比例');
+  }).join('') + label(300,250,'行星环示意','#adcbd6',12)));
   if (id === 4) return `<div class="relay-figure">${relayDiagram()}</div>`;
   if (id === 6) return illustration(solarOrbitDiagram());
-  if (id === 25) return `<div class="card-figure knowledge-illustration">${milkyWayDiagram()}</div><small class="diagram-note">NASA 科学示意图 · 非外部实拍</small><div class="galaxy-credit"><a href="https://science.nasa.gov/photojournal/our-milky-way-gets-a-makeover-artist-concept/" target="_blank" rel="noopener noreferrer">NASA / JPL-Caltech · PIA10748 ↗</a><button type="button" class="photo-text-button" data-photo-src="./assets/knowledge/milky-way-annotated.jpg" data-photo-title="银河系 · NASA 官方标注图">查看官方标注大图 ↗</button></div>`;
+  if (id === 25) return `<div class="card-figure knowledge-illustration">${milkyWayDiagram()}</div><div class="galaxy-credit"><button type="button" class="photo-text-button" data-photo-src="./assets/knowledge/milky-way-annotated.jpg" data-photo-title="银河系标注图">查看大图</button></div>`;
   const keys = {5:['regolith'],11:['mars'],12:['rover'],13:['phobos','deimos'],17:['storm'],18:['clouds'],19:['rings'],24:['pluto']}[id];
   if (!keys) return null;
   return `<div class="card-figure photo-figure ${keys.length>1?'photo-pair':''}">${keys.map(photo).join('')}</div>`;

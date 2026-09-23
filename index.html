@@ -13,6 +13,7 @@
     <link rel="preload" as="image" href="./assets/signal-occluder.webp" />
     <link rel="stylesheet" href="./src/style.css" />
     <link rel="stylesheet" href="./src/solar.css" />
+    <link rel="stylesheet" href="./src/observatory.css" />
     <script type="module" src="./src/app.mjs"></script>
   </head>
   <body>
@@ -36,11 +37,9 @@
       </header>
 
       <section class="screen home-screen" id="home-screen" aria-label="游戏首页">
+        <div class="home-hero">
         <div class="hero-copy">
-          <div class="chapter-ribbon" id="home-chapter">第一章 · 星港出发</div>
-          <h1>星际<span>信号站</span></h1>
-          <div class="title-line"></div>
-          <p id="home-goal">唤醒沉睡的接收器</p>
+          <h1>接收信号，<span>点亮星空。</span></h1>
           <div class="hero-actions">
             <button id="continue" class="action-button gold">
               <span id="continue-label">开始旅程</span><b>➜</b>
@@ -48,15 +47,18 @@
             <button class="action-button outline" data-action="atlas">
               星图图鉴 <span>▤</span>
             </button>
+            <button class="text-button" data-action="help">怎么玩 <span aria-hidden="true">?</span></button>
           </div>
-          <div class="current-mission" id="current-mission">第 1 关 · 初醒信号</div>
+        </div>
+        <div class="observatory-scene">
+          <div class="scene-orbit" aria-hidden="true"></div>
+          <div id="hero-planet" class="hero-planet"></div>
+          <div class="scene-caption"><span id="hero-body-name"></span></div>
+          <button type="button" class="companion" id="home-companion" aria-label="和小兔打招呼" title="点一点，和小兔打招呼"></button>
+        </div>
         </div>
         <div class="home-solar" id="home-solar"></div>
-        <div class="companion" id="home-companion"></div>
         <div class="home-bottom">
-          <div class="network-summary">
-            <span>星网重联</span><strong id="network-count">0 / 25</strong>
-          </div>
           <div id="home-towers" class="home-towers"></div>
           <button id="records" class="text-button">航行记录 ↗</button>
         </div>
@@ -86,12 +88,15 @@
           <div class="briefing-content">
             <span id="briefing-number" class="overline"></span>
             <h2 id="briefing-title"></h2>
-            <p id="briefing-goal" class="mission-goal"></p>
             <div class="rule-heading" id="briefing-rule"></div>
             <div id="examples" class="examples"></div>
             <p id="practice-hint" class="practice-hint" role="status"></p>
             <button id="ready" class="action-button gold">我会了 <b>➜</b></button>
-            <div id="pass-requirement" class="pass-requirement"></div>
+            <details id="briefing-details" class="rule-details">
+              <summary>规则详情</summary>
+              <p id="briefing-demo"></p>
+              <div id="pass-requirement" class="pass-requirement"></div>
+            </details>
           </div>
         </div>
       </section>
@@ -139,23 +144,23 @@
           <span id="result-kicker" class="overline"></span>
           <div id="result-stars" class="result-stars"></div>
           <h2 id="result-title"></h2>
-          <p id="result-message"></p>
           <div class="score-medallion">
             <svg viewBox="0 0 180 180" aria-hidden="true">
               <circle cx="90" cy="90" r="78" />
               <circle cx="90" cy="90" r="78" id="score-ring" /></svg
             ><strong id="result-score">0</strong><span>信号清晰度</span>
           </div>
-          <div class="result-metrics">
+          <details id="result-details" class="rule-details result-details">
+            <summary>成绩详情</summary>
+            <div class="result-metrics">
             <div>
-              <span>目标接收率</span><strong id="result-hit"></strong
-              ><small id="result-hit-limit"></small>
+              <span>目标接收率</span><strong id="result-hit"></strong>
             </div>
             <div>
-              <span>干扰识别率</span><strong id="result-reject"></strong
-              ><small id="result-reject-limit"></small>
+              <span>干扰识别率</span><strong id="result-reject"></strong>
             </div>
-          </div>
+            </div>
+          </details>
           <div class="result-buttons">
             <button class="action-button outline" data-action="home">返回主页</button
             ><button class="action-button outline" data-action="retry">重试</button

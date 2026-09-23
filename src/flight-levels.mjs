@@ -323,7 +323,7 @@ export function ruleText(rule) {
   return rule
     .map(
       (r) =>
-        `${COLOR_NAMES[r.color] || ""}${r.direction ? "朝上的" : ""}${r.halo ? "带光环的" : ""}${r.solid ? "实心" : ""}${SHAPE_NAMES[r.shape] || "信号"}${!r.color && r.shape && !r.halo && !r.direction ? "（不限颜色）" : ""}${r.color && Object.keys(r).length === 1 ? "（不限形状）" : ""}`,
+        `${COLOR_NAMES[r.color] || ""}${r.direction ? "朝上的" : ""}${r.halo ? "带光环的" : ""}${r.solid ? "实心" : ""}${SHAPE_NAMES[r.shape] || "信号"}${!r.color ? "（不限颜色）" : ""}${!r.shape ? "（不限形状）" : ""}`,
     )
     .join(" 或 ");
 }

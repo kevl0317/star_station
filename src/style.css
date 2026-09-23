@@ -599,6 +599,8 @@ h1 span {
 }
 .signal-pod {
   position: absolute;
+  left: 0;
+  top: 0;
   width: 72px;
   height: 72px;
   padding: 4px;
@@ -630,9 +632,12 @@ h1 span {
 }
 .signal-dust {
   position: absolute;
+  left: 0;
+  top: 0;
   width: 90px;
   height: 67px;
   background: url("../assets/signal-occluder.webp") center / contain no-repeat;
+  opacity: 0.72;
   filter: drop-shadow(0 3px 3px #020814bb);
   pointer-events: none;
   z-index: 3;
@@ -886,13 +891,8 @@ h1 span {
   margin: 10px 0 8px;
   display: block;
 }
-.result-metrics small {
-  font-size: 10px;
-  color: #88b29d;
-}
-.result-metrics small.fail {
-  color: #efa895;
-}
+
+
 .result-buttons {
   display: flex;
   justify-content: center;
@@ -1812,9 +1812,7 @@ dialog .action-button {
   .result-metrics strong {
     font-size: 28px;
   }
-  .result-metrics small {
-    font-size: 9px;
-  }
+  
   .result-buttons {
     flex-wrap: wrap;
     gap: 9px;

@@ -385,11 +385,7 @@
   line-height: 1.9;
   margin: 18px 0;
 }
-.knowledge-card footer {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+
 .bunny-lesson {
   display: flex;
   align-items: flex-end;
@@ -465,8 +461,8 @@ dialog.photo-viewer::backdrop { background: #020712e8; }
 .knowledge-photo img { display: block; width: 100%; height: clamp(190px, 22vw, 300px); object-fit: contain; }
 .knowledge-photo figcaption { display: grid; gap: 5px; padding: 10px 3px 0; line-height: 1.5; }
 .knowledge-photo figcaption strong { color: #e5edf0; font-size: 13px; font-weight: 500; }
-.knowledge-photo figcaption span { color: #a2c4d1; font-size: 11px; }
-.knowledge-photo figcaption a { font-size: 10px; overflow-wrap: anywhere; }
+
+
 .knowledge-photo a:focus-visible { outline: 2px solid #f4d596; outline-offset: 3px; }
 .knowledge-illustration > svg.learning-diagram { width: 100%; max-height: 300px; }
 .knowledge-illustration > svg.galaxy-diagram { max-height: 380px; }
@@ -512,12 +508,7 @@ dialog.photo-viewer::backdrop { background: #020712e8; }
   line-height: 1.8;
   color: #a1bac6;
 }
-.diagram-note {
-  display: block;
-  font-size: 9px;
-  text-align: center;
-  color: #76919e;
-}
+
 .planet-order {
   display: flex;
   width: 100%;
@@ -1328,3 +1319,12 @@ dialog.photo-viewer::backdrop { background: #020712e8; }
   .ending-actions .action-button { width: 100%; max-width: 320px; }
   .ending-stats strong { font-size: 20px; }
 }
+/* QA: make the chapter's observed bodies and star collection explicit. */
+.chapter-inner-planets { display: flex; align-items: center; justify-content: center; gap: 20px; height: 100%; }
+.chapter-inner-planets > div { flex: 1; min-width: 0; text-align: center; }
+.chapter-inner-planets svg { width: 100%; height: 115px; }
+.chapter-inner-planets span { display: block; font-size: 14px; color: #e5edf0; }
+.planet-order .order-sun svg { opacity: 1; }
+.planet-order .order-sun span { color: #f0d39b; }
+.photo-mission { color: #bed5dc; font-size: 12px; }
+

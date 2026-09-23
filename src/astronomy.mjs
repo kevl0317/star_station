@@ -58,7 +58,7 @@ const cards = [
   ["太阳的身份", "太阳是一颗恒星，也是太阳系唯一的恒星。", "sun", "sun"],
   ["最靠近太阳的行星", "水星在八大行星中最靠近太阳，也是其中最小的一颗。", "mercury", "mercury"],
   ["水星的一年", "水星绕太阳一周大约需要88个地球日。", "mercury", "mercury"],
-  ["最热的是金星", "金星浓厚的大气产生强烈温室效应，使它成为太阳系最热的行星。", "venus", "venus"],
+  ["最热的是金星", "水星比金星更靠近太阳，但金星浓厚的大气产生强烈温室效应，让它成为太阳系最热的行星。离太阳更近，不一定更热。", "venus", "venus"],
   ["金星和水星的共同点", "水星和金星都没有天然卫星。", "venus", "mercury", "venus"],
   ["火星为什么红", "火星表面的铁矿物发生氧化，让它看起来偏红。", "mars", "mars"],
   [
@@ -133,7 +133,9 @@ export function cardFigure(id) {
   const artwork = knowledgeFigure(id);
   if (artwork) return artwork;
   let html = "";
-  if ([1, 7, 22].includes(id))
+  if (id === 22)
+    html = `<div class="planet-order"><div class="order-sun">${planetSVG("sun")}<span>太阳</span></div>${PLANETS.map((p, i) => `<div class="${p === "neptune" ? "highlight" : ""}">${planetSVG(p)}<span>${i + 1} ${bodyInfo(p).name}</span></div>`).join("")}</div>`;
+  else if ([1, 7].includes(id))
     html = `<div class="planet-order">${PLANETS.map((p, i) => `<div class="${p === CARDS[id - 1].body ? "highlight" : ""}">${planetSVG(p)}<span>${i + 1} ${bodyInfo(p).name}</span></div>`).join("")}</div>`;
   else if (id === 2)
     html = item("earth") + '<span class="diagram-link">↔</span>' + item("moon", "月球 · 天然卫星");
@@ -148,8 +150,9 @@ export function cardFigure(id) {
       item("sun") +
       '<span class="diagram-link">⟲<small>约88个地球日</small></span>' +
       item("mercury");
-  else if (id === 9) html = item("mercury", "更靠近太阳") + item("venus", "最热的行星");
-  else if (id === 10) html = item("mercury", "无天然卫星") + item("venus", "无天然卫星");
+  else if (id === 9)
+    html = item("sun", "太阳") + item("mercury", "水星<br>更靠近太阳") + item("venus", "金星<br>最热的行星");
+  else if (id === 10) html = item("mercury", "水星<br>无天然卫星") + item("venus", "金星<br>无天然卫星");
   else if (id === 14) html = item("mars") + item("asteroids") + item("jupiter");
   else if (id === 15) html = item("asteroids", "形状不规则、分布稀疏");
   else if (id === 16)
@@ -159,15 +162,15 @@ export function cardFigure(id) {
       '<div class="tilt-diagram">' +
       planetSVG("uranus") +
       "<i></i><span>自转轴倾角 ≈98°</span></div>";
-  else if (id === 23) html = item("earth", "公转约1年") + item("neptune", "公转约165地球年");
+  else if (id === 23) html = item("earth", "地球<br>公转约1年") + item("neptune", "海王星<br>公转约165地球年");
   else html = galaxySVG();
-  return `<div class="card-figure">${html}</div><small class="diagram-note">示意图 · 距离与大小未按比例</small>`;
+  return `<div class="card-figure">${html}</div>`;
 }
 export function cardHTML(id, { narrated = false } = {}) {
   const c = CARDS[id - 1];
   const explanation = narrated
     ? `<div class="bunny-lesson"><div class="bunny-lesson-art">${bunnySVG}</div><div class="bunny-speech"><p>${c.text}</p></div></div>`
     : `<p>${c.text}</p>`;
-  return `<article class="knowledge-card"><div class="card-heading"><span>${c.code} · ${c.kind}</span><strong>${c.title}</strong></div>${cardFigure(id)}${explanation}<footer>${c.sources.map(([name, url]) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${name} ↗</a>`).join("")}</footer></article>`;
+  return `<article class="knowledge-card"><div class="card-heading"><span>${c.code} · ${c.kind}</span><strong>${c.title}</strong></div>${cardFigure(id)}${explanation}</article>`;
 }
 export const bunnySVG = `<svg class="bunny-art" viewBox="0 0 1145 1374" role="img" aria-label="白兔向导"><image href="./assets/solar-art-v1/bunny-white-moon.png" width="1145" height="1374" preserveAspectRatio="xMidYMid meet"/></svg>`;

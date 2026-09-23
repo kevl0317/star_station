@@ -24,6 +24,7 @@
 - `src/levels.mjs`：将旧玩法配置与现有太阳系任务、观测天体关联。
 - `src/engine.mjs`：信号调度、判断、计分及存档。
 - `src/renderer.mjs`：移动轨迹、飞船接收曲线。
+- `src/observatory.css`：参考山海食谱铺的信息层次，统一首页章节卡、按钮、关前规则、图鉴与结算面板的展示。
 - `src/astronomy.mjs`、`assets/solar-art-v1/`：知识卡和生成美术。
 - `ART.md`：素材来源与提示词记录。
 
@@ -32,3 +33,5 @@
 `docs/` 保留本机需求文档，不纳入 Git；游戏运行不依赖该目录。
 
 开发检查：`signal-art-preview.html` 预览飞行信号，`knowledge-art-preview.html` 预览全部知识卡；`node scripts/check-assets.mjs` 检查素材缺失与未使用文件。
+
+2026-09-19 界面整理：首页按观测场景、章节选择、本章五关分层展示；太阳系星图保留在可展开区域。支持浏览未开启章节的任务，开始关卡仍遵守原有解锁顺序。手机章节条保留选中位置，结算在中小屏采用单列。关卡配置、计分、练习时序和存档格式未变。

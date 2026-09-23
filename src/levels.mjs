@@ -17,7 +17,7 @@ export const CHAPTERS = [
     name: "向阳观测",
     tower: "向阳节点",
     color: "#edc994",
-    line: "接收向阳观测数据，找回失联科考船",
+    line: "接收太阳、水星和金星的观测数据",
     badge: "向阳观测章",
   },
   {
@@ -178,7 +178,7 @@ export function ruleText(rule) {
   return rule
     .map(
       (r) =>
-        `${COLOR_NAMES[r.color] || ""}${r.direction ? "朝上的" : ""}${r.halo ? "带光环的" : ""}${r.solid ? "实心" : ""}${SHAPE_NAMES[r.shape] || "信号"}${!r.color && r.shape && !r.halo && !r.direction ? "（不限颜色）" : ""}${r.color && Object.keys(r).length === 1 ? "（不限形状）" : ""}`,
+        `${COLOR_NAMES[r.color] || ""}${r.direction ? "朝上的" : ""}${r.halo ? "带光环的" : ""}${r.solid ? "实心" : ""}${SHAPE_NAMES[r.shape] || "信号"}${!r.color ? "（不限颜色）" : ""}${!r.shape ? "（不限形状）" : ""}`,
     )
     .join(" 或 ");
 }

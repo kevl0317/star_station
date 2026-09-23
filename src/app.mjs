@@ -42,6 +42,7 @@ let save = readSave(raw),
   toastUntil = 0;
 let lastRenderSecond = -1,
   celebrated = false;
+let homeChapter = 0;
 const reducedOS = matchMedia("(prefers-reduced-motion:reduce)").matches;
 const nodes = new Map(),
   audio = new GameAudio(),
@@ -73,6 +74,7 @@ function preferences() {
   world.reduced = reducedOS;
   $("game-root").classList.toggle("reduced", world.reduced);
   $("sound").innerHTML = icon(save.muted ? "muted" : "sound");
+  $("sound").setAttribute("aria-pressed", String(!save.muted));
   $("sound").setAttribute("aria-label", save.muted ? "开启声音" : "关闭声音");
   $("sound").title = save.muted ? "开启声音" : "关闭声音";
 }
@@ -100,18 +102,27 @@ function levelButton(l) {
 }
 function chapterRoutes() {
   const open = unlocked(save);
-  return `<div class="mission-routes">${CHAPTERS.map((c, i) => {
+  const complete = LEVELS.filter((l) => save.stars[l.id]).length;
+  return `<div class="journey-heading"><h2>观测航线</h2><div class="journey-progress"><span><strong>${complete}</strong> / 25 关</span><progress value="${complete}" max="25" aria-label="已通关关卡"></progress></div></div><div class="chapter-tabs" role="group" aria-label="选择观测章节">${CHAPTERS.map((chapter, i) => {
     const levels = LEVELS.filter((l) => l.chapter === i);
     const done = levels.filter((l) => save.stars[l.id]).length;
-    const active = levels.some((l) => l.id === open);
-    return `<section class="mission-route ${active ? "route-active" : ""} ${done === 5 ? "route-complete" : ""}" style="--route-color:${c.color}" aria-label="${c.name}"><div class="route-heading"><span class="route-index">0${i + 1}</span><h3>${c.name}</h3><small>${done}/5</small></div><div class="route-stops">${levels
-      .map((l) => {
-        const stars = save.stars[l.id] || 0;
-        const locked = l.id > open;
-        return `<button class="route-stop ${stars ? "passed" : ""} ${l.id === open ? "current" : ""} ${l.checkpoint ? "checkpoint" : ""}" data-action="level" data-level="${l.id}" ${locked ? "disabled" : ""} ${l.id === open ? 'aria-current="step"' : ""} title="${l.name}" aria-label="第${l.id}关 ${l.name}${locked ? "，未解锁" : stars ? `，${stars}星` : "，当前关卡"}"><span class="stop-number">${String(l.id).padStart(2, "0")}</span><span class="stop-rating" aria-hidden="true">${stars ? "★".repeat(stars) : locked ? "·" : "◆"}</span></button>`;
-      })
-      .join("")}</div></section>`;
+    return `<button class="chapter-tab ${i === homeChapter ? "active" : ""}" data-action="select-chapter" data-chapter="${i}" aria-pressed="${i === homeChapter}"><span class="chapter-number">0${i + 1}</span><span><strong>${chapter.name}</strong><small>${done}/5</small></span></button>`;
+  }).join("")}</div><div class="mission-cards">${LEVELS.filter(l => l.chapter === homeChapter).map(l => {
+    const stars = save.stars[l.id] || 0;
+    const locked = l.id > open;
+    const status = locked ? `通关第 ${l.id - 1} 关后开启` : stars ? "再次观测 ↗" : "开始观测 →";
+    return `<button class="mission-card ${stars ? "passed" : ""} ${!stars && !locked ? "current" : ""}" data-action="level" data-level="${l.id}" ${locked ? "disabled" : ""} ${!stars && !locked ? 'aria-current="step"' : ""} aria-label="第${l.id}关 ${l.name}，${locked ? status : stars ? `${stars}星，再次观测` : "当前关卡，开始观测"}"><span class="mission-card-top">第 ${String(l.id).padStart(2, "0")} 关 <small>${l.checkpoint ? "验收" : bodyInfo(l.body).name}</small></span><div class="mission-card-art" aria-hidden="true">${planetSVG(l.body)}</div><strong>${l.name}</strong><span class="mission-card-bottom"><span class="mission-stars" aria-hidden="true">${"★".repeat(stars)}<i>${"☆".repeat(3 - stars)}</i></span><small>${locked ? "未解锁" : stars ? "重玩 ↗" : "开始 →"}</small></span></button>`;
   }).join("")}</div>`;
+}
+function renderHomeJourney(preserveScroll = false) {
+  const previousScroll = preserveScroll ? $("home-solar").querySelector(".chapter-tabs")?.scrollLeft || 0 : 0;
+  $("home-solar").innerHTML = chapterRoutes() + `<details class="solar-overview"><summary>太阳系星图</summary>${solarChart()}</details>`;
+  const tabs = $("home-solar").querySelector(".chapter-tabs");
+  tabs.scrollLeft = previousScroll;
+  const active = tabs.querySelector('[aria-pressed="true"]').getBoundingClientRect();
+  const bounds = tabs.getBoundingClientRect();
+  if (active.right > bounds.right) tabs.scrollLeft += active.right - bounds.right + 4;
+  else if (active.left < bounds.left) tabs.scrollLeft -= bounds.left - active.left + 4;
 }
 function levelsForBody(id) {
   return LEVELS.filter((l) => l.body === id || (id === "earth" && l.body === "earthmoon"));
@@ -153,7 +164,7 @@ function atlas(filter = "all") {
   $("atlas-filters").innerHTML = filters
     .map(
       ([id, label]) =>
-        `<button class="${filter === id ? "active" : ""}" data-action="atlas-filter" data-body="${id}">${label}</button>`,
+        `<button class="${filter === id ? "active" : ""}" data-action="atlas-filter" data-body="${id}" aria-pressed="${filter === id}">${label}</button>`,
     )
     .join("");
   const cards = CARDS.filter(
@@ -188,19 +199,17 @@ function home() {
   countdown = null;
   clearSignals();
   selected = unlocked(save);
-  const l = LEVELS[selected - 1],
-    c = CHAPTERS[l.chapter];
+  const l = LEVELS[selected - 1];
+  homeChapter = l.chapter;
   show("home");
-  $("home-chapter").textContent = `第${["一", "二", "三", "四", "五"][l.chapter]}章 · ${c.name}`;
-  $("home-goal").textContent = c.line;
   $("continue-label").textContent = LEVELS.every(l => save.stars[l.id]) ? "重温旅程结尾" : Object.keys(save.stars).length ? "继续旅程" : "开始旅程";
-  $("current-mission").textContent = `第 ${selected} 关 · ${l.name}`;
-  $("network-count").textContent = `${Object.keys(save.stars).length} / 25`;
+  $("hero-planet").innerHTML = planetSVG(l.body);
+  $("hero-body-name").textContent = bodyInfo(l.body).name;
   $("home-towers").innerHTML = CHAPTERS.map(
     (c, i) =>
-      `<button class="home-tower" data-action="home" aria-label="${c.tower}，${towerProgress(save, i)}/5"><div>${towerSVG(towerProgress(save, i), c.color)}</div><span>${c.name}<small>${towerProgress(save, i)} / 5</small></span></button>`,
+      `<div class="home-tower" role="img" title="${c.tower}，${towerProgress(save, i)}/5" aria-label="${c.tower}，${towerProgress(save, i)}/5"><div aria-hidden="true">${towerSVG(towerProgress(save, i), c.color)}</div></div>`,
   ).join("");
-  $("home-solar").innerHTML = solarChart() + chapterRoutes();
+  renderHomeJourney();
 }
 function briefing(id) {
   if (id > unlocked(save) || id < 1 || id > 25) return;
@@ -215,9 +224,9 @@ function briefing(id) {
   show("briefing");
   $("briefing-number").textContent = `第 ${id} 关`;
   $("briefing-title").textContent = l.name;
-  $("briefing-goal").textContent =
-    `本关观测：${bodyInfo(l.body).name}${l.id === 6 ? " · 游戏故事：远星号失联了，寻找它的求救信号。" : ""}`;
   $("briefing-rule").textContent = `只点：${ruleText(l.rule)}`;
+  $("briefing-details").open = false;
+  $("briefing-demo").textContent = l.demo;
   $("briefing-tower").innerHTML = planetSVG(l.body);
   $("briefing-chapter").textContent = c.name;
   $("pass-requirement").textContent =
@@ -235,7 +244,7 @@ function briefing(id) {
   $("ready").disabled = mustPractice;
   $("ready").innerHTML = mustPractice ? "先完成练习" : "我会了 <b>➜</b>";
   $("practice-hint").className = "practice-hint";
-  $("practice-hint").textContent = mustPractice ? "练习 1 / 3 · 5 秒" : l.demo;
+  $("practice-hint").textContent = mustPractice ? "练习 1 / 3 · 5 秒" : "";
   renderPracticeStep();
   last = performance.now();
 }
@@ -337,7 +346,7 @@ function start() {
   }).join("");
   $("play-tower").innerHTML =
     `<div class="observation-image">${planetSVG(l.body)}<div class="observation-tiles">${tiles}</div></div>`;
-  $("play-tower-name").textContent = `观测图像 · ${bodyInfo(l.body).name}`;
+  $("play-tower-name").textContent = bodyInfo(l.body).name;
   $("repair-segments").innerHTML =
     `<span id="image-progress">0 / ${targetCount}</span>`;
   updateTime();
@@ -391,7 +400,7 @@ function renderSignals() {
     const coverWidth = size * 1.45;
     node.dust.style.width = `${coverWidth}px`;
     node.dust.style.height = `${size}px`;
-    node.dust.style.transform = `translate(${pos.x - coverWidth / 2}px,${pos.y - size * 0.42}px) rotate(${s.id % 2 ? -7 : 7}deg)`;
+    node.dust.style.transform = `translate(${pos.x - coverWidth / 2}px,${pos.y - size / 2}px) rotate(${s.id % 2 ? -7 : 7}deg)`;
   }
 }
 function consume() {
@@ -448,7 +457,7 @@ function finish() {
   $("countdown").hidden = true;
   const r = session.result(),
     l = session.level;
-  const showCard = !save.shownCards.includes(l.id);
+
   save = recordResult(save, session);
   persist();
   show("result");
@@ -457,28 +466,14 @@ function finish() {
     .map((n) => `<span class="${n <= r.stars ? "earned" : ""}">★</span>`)
     .join("");
   $("result-title").textContent = r.passed ? "信号接通" : "再试一次";
-  $("result-message").textContent = r.passed
-    ? l.id < 25
-      ? `下一任务：${bodyInfo(LEVELS[l.id].body).name} · ${LEVELS[l.id].name}`
-      : "太阳系游戏节点全部接通"
-    : [
-        r.hitRate < l.minHit ? "目标接收率未达标" : "",
-        r.falseRate > l.maxFalse ? "干扰识别率未达标" : "",
-      ]
-        .filter(Boolean)
-        .join(" · ");
-  $("result-card").hidden = !showCard;
-  $("result-card").innerHTML = showCard ? cardHTML(l.id, { narrated: true }) : "";
-  document.querySelector(".result-content").classList.toggle("without-card", !showCard);
+  $("result-details").open = false;
+  $("result-card").hidden = false;
+  $("result-card").innerHTML = cardHTML(l.id, { narrated: true });
+  document.querySelector(".result-content").classList.remove("without-card");
   $("result-score").textContent = r.clarity ?? 0;
   $("score-ring").style.strokeDashoffset = 490 * (1 - (r.clarity ?? 0) / 100);
   $("result-hit").textContent = pct(r.hitRate);
   $("result-reject").textContent = pct(r.rejectionRate);
-  $("result-hit-limit").textContent = `${r.hitRate >= l.minHit ? "✓" : "○"} ≥ ${pct(l.minHit)}`;
-  $("result-hit-limit").className = r.hitRate >= l.minHit ? "" : "fail";
-  $("result-reject-limit").textContent =
-    `${r.falseRate <= l.maxFalse ? "✓" : "○"} ≥ ${pct(1 - l.maxFalse)}`;
-  $("result-reject-limit").className = r.falseRate <= l.maxFalse ? "" : "fail";
   $("next").hidden = !r.passed;
   $("next").innerHTML = l.id === 25 ? "完成旅程 <b>➜</b>" : l.checkpoint ? "章节验收 <b>➜</b>" : "下一关 <b>➜</b>";
   celebrated = false;
@@ -494,7 +489,7 @@ function chapter() {
   $("chapter-repaired").textContent = `第${["一", "二", "三", "四", "五"][l.chapter]}章完成`;
   $("chapter-art").innerHTML =
     selected === 10
-      ? '<img src="./assets/rescue-ship.webp" alt="获救的远星号">'
+      ? `<div class="chapter-inner-planets">${["sun", "mercury", "venus"].map(id => `<div>${planetSVG(id)}<span>${bodyInfo(id).name}</span></div>`).join("")}</div>`
       : planetSVG(l.body);
   $("chapter-network").innerHTML = CHAPTERS.map(
     (c, i) =>
@@ -507,11 +502,11 @@ function chapter() {
   );
   $("chapter-title").textContent =
     selected === 10
-      ? "欢迎回家，远星号"
+      ? "向阳观测，任务完成"
       : `${c.name} · 验收完成`;
   $("chapter-line").textContent =
     selected === 10
-      ? "游戏故事 · 失联科考船远星号已安全获救，本次救援完成。"
+      ? "太阳、水星和金星的五项观测任务已完成，向阳观测节点全部接通！"
       : `${c.name}的五个观测节点已接通`;
   $("chapter-badge").textContent = `✧ 获得徽章 · ${c.badge}`;
   $("chapter-next").innerHTML = "继续旅程 <b>➜</b>";
@@ -552,7 +547,7 @@ function pause() {
   $("game-root").classList.add("paused");
   modal(
     "已暂停",
-    `<p>只点：${esc(ruleText(session.level.rule))}</p><button class="action-button gold" data-action="resume">继续接收 <b>➜</b></button><button class="action-button outline" data-action="restart">重新开始</button><button class="action-button outline" data-action="settings">设置</button><button class="action-button outline" data-action="quit">返回主页</button>`,
+    `<button class="action-button gold" data-action="resume">继续 <b>➜</b></button><button class="action-button outline" data-action="restart">重新开始</button><button class="action-button outline" data-action="settings">设置</button><button class="action-button outline" data-action="quit">返回主页</button>`,
     "pause",
   );
 }
@@ -569,16 +564,40 @@ function settings() {
   if (screen === "game") pause();
   modal(
     "设置",
-    `<div class="setting-row"><span>声音</span><button data-action="sound">${save.muted ? "关闭" : "开启"}</button></div><button class="action-button outline" data-action="help">玩法说明</button><button class="action-button outline" data-action="records">航行记录</button>`,
+    `<div class="setting-row"><span>声音</span><button data-action="sound" aria-label="声音" aria-pressed="${!save.muted}">${save.muted ? "已关闭" : "已开启"}</button></div><button class="action-button outline" data-action="help">玩法说明</button><button class="action-button outline" data-action="records">航行记录</button><button class="action-button outline" data-action="clear-records">清空本地记录</button><p class="settings-note">星级、收藏与航行记录自动保存在当前浏览器。</p>`,
     "settings",
   );
 }
-function help() {
+function confirmClearRecords() {
   modal(
-    "玩法说明",
-    '<ol class="help-list"><li>点击从两侧飞入、符合规则的信号。</li><li>信号飞出前完成判断，后期加入分区扫描与变速。</li><li>通过一关恢复一个节点，收藏一张知识卡。</li><li>空格或Esc暂停；切换后台会自动暂停。</li></ol><button class="action-button gold" data-action="close">我知道了</button>',
+    "清空本地记录？",
+    '<p>将清除当前浏览器中的所有关卡进度、星星、知识卡收藏和航行记录，恢复初始设置，并返回主页。清空后无法恢复。</p><button class="action-button gold" data-action="settings">取消</button><button class="action-button outline" data-action="confirm-clear-records">确认清空</button>',
+    "clear-records",
+  );
+}
+function clearLocalRecords() {
+  if (modalMode !== "clear-records") return;
+  try {
+    localStorage.removeItem(storageKey);
+  } catch {
+    toast("清空失败，请检查浏览器是否允许访问本地存储。");
+    return;
+  }
+  save = readSave(null);
+  preferences();
+  home();
+  toast("本地记录已清空，可以重新开始旅程。");
+}
+function help() {
+  const l = LEVELS[selected - 1];
+  modal(
+    "认准图案",
+    `<p class="help-target">${esc(ruleText(l.rule))}</p>${signalGuide(l)}<details class="rule-details"><summary>规则详情</summary><p>点击符合规则的信号，飞出前接住它。</p><p>空格 / Esc 暂停。</p></details><button class="action-button gold" data-action="close">知道了</button>`,
     "help",
   );
+}
+function signalGuide(level) {
+  return `<div class="signal-guide">${examples(level).map(s => `<div class="signal-guide-item ${s.target ? "target" : "ignore"}"><div class="signal-guide-art" role="img" aria-label="${esc(signalName(s))}">${signalSVG(s)}</div>${icon(s.target ? "accept" : "ignore")}<span>${s.target ? "点一下" : "不点"}</span></div>`).join("")}</div>`;
 }
 function records() {
   if (screen === "game") pause();
@@ -626,6 +645,11 @@ function routeAction(action, button) {
     return;
   }
   switch (action) {
+    case "select-chapter":
+      homeChapter = Number(button.dataset.chapter);
+      renderHomeJourney(true);
+      $("home-solar").querySelector(`[data-chapter="${homeChapter}"]`).focus({ preventScroll: true });
+      break;
     case "body":
       bodyDetail(button.dataset.body);
       break;
@@ -642,14 +666,7 @@ function routeAction(action, button) {
       pause();
       modal(
         "本关规则",
-        `<p>只点：${ruleText(session.level.rule)}</p><div class="examples">${examples(session.level)
-          .map(
-            (s) =>
-              `<div class="example">${signalSVG(s)}<span class="example-cue ${s.target ? "yes" : "no"}">${icon(s.target ? "accept" : "ignore")}</span></div>`,
-          )
-          .join(
-            "",
-          )}</div><p>${session.level.demo}</p><button class="action-button gold" data-action="resume">继续接收</button>`,
+        `<p class="help-target">只点：${esc(ruleText(session.level.rule))}</p>${signalGuide(session.level)}<details class="rule-details"><summary>规则详情</summary><p>${esc(session.level.demo)}</p></details><button class="action-button gold" data-action="resume">继续</button>`,
         "rules",
       );
       break;
@@ -684,6 +701,12 @@ function routeAction(action, button) {
       break;
     case "settings":
       settings();
+      break;
+    case "clear-records":
+      confirmClearRecords();
+      break;
+    case "confirm-clear-records":
+      clearLocalRecords();
       break;
     case "help":
       help();
@@ -822,6 +845,19 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 $("home-companion").innerHTML = bunnySVG;
+$("home-companion").addEventListener("click", () => {
+  const bunny = $("home-companion");
+  bunny.classList.remove("greeting");
+  void bunny.offsetWidth;
+  bunny.classList.add("greeting");
+  audio.unlock();
+  audio.play("click");
+});
+$("home-companion").addEventListener("animationend", (event) => {
+  if (event.animationName === "bunny-greeting" || event.animationName === "bunny-greeting-gentle") {
+    $("home-companion").classList.remove("greeting");
+  }
+});
 $("fullscreen").innerHTML = icon("fullscreen");
 $("settings").innerHTML = icon("settings");
 $("pause").innerHTML = icon("pause");
