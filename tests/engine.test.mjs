@@ -256,7 +256,7 @@ test("曲线在各方向与距离下都不进入圆内、不折返，短线弧�
   }
   for (const x of [200, 220, 290]) assert.equal(receiverCurve(receiver, { x, y: 300 }), null);
 });
-test("遮挡前完整出现，遮挡0.55秒且不可点击，恢复后可点", () => {
+test("遮挡前完整出现，遮挡0.8秒且不可点击，恢复后可点", () => {
   const s = new Session(LEVELS[7], 32);
   const target = s.schedule.find((x) => x.occluded);
   assert.ok(target);
@@ -264,7 +264,7 @@ test("遮挡前完整出现，遮挡0.55秒且不可点击，恢复后可点", (
   s.tick(target.at + target.occlusionStart + 0.01);
   assert.equal(isHidden(target, s.elapsed), true);
   assert.equal(s.click(target.id), null);
-  s.tick(0.56);
+  s.tick(0.81);
   assert.equal(isHidden(target, s.elapsed), false);
   assert.notEqual(s.click(target.id), null);
 });
@@ -280,10 +280,10 @@ test("遮挡时间按信号随机分布，前后保留清晰窗口，暂停不�
         const start = signal.occlusionStart;
         starts.push(start / signal.life);
         assert.ok(start >= 0.7);
-        assert.ok(start + 0.55 <= signal.life - 0.7 + 1e-9);
+        assert.ok(start + 0.8 <= signal.life - 0.7 + 1e-9);
         assert.equal(isHidden(signal, signal.at + start - 0.01), false);
         assert.equal(isHidden(signal, signal.at + start + 0.01), true);
-        assert.equal(isHidden(signal, signal.at + start + 0.56), false);
+        assert.equal(isHidden(signal, signal.at + start + 0.81), false);
       }
     }
     assert.ok(Math.min(...starts) < 0.3, "有些信号在前段遮挡");
@@ -300,7 +300,7 @@ test("遮挡时间按信号随机分布，前后保留清晰窗口，暂停不�
   assert.equal(session.elapsed, before);
   assert.equal(isHidden(signal, session.elapsed), true);
   session.resume();
-  session.tick(0.5);
+  session.tick(0.71);
   assert.equal(isHidden(signal, session.elapsed), false);
 });
 test("第22关同一时刻只有一个信号，并覆盖三个区域", () => {

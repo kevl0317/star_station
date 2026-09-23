@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>知识卡配图预览 · 星际信号站</title>
-<link rel="stylesheet" href="./src/style.css"><link rel="stylesheet" href="./src/solar.css">
-<style>body{overflow:auto;background:#071526 url('./assets/galaxy-pastel.png') center/cover fixed}main{max-width:1150px;margin:auto;padding:32px 20px}header{margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:24px;color:#f4d39e}header a{color:#d1e9f0}.preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.knowledge-card{min-width:0}.preview-grid article{scroll-margin-top:20px}@media(max-width:700px){.preview-grid{grid-template-columns:1fr}}</style>
+<link rel="stylesheet" href="./src/theme.css"><link rel="stylesheet" href="./src/cards.css">
+<style>body{overflow:auto;background:#0b1236 url('./assets/galaxy-pastel.webp') center/cover fixed}main{max-width:1150px;margin:auto;padding:32px 20px}header{margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:24px;color:#f6d98a}header a{color:#d3daf6}.preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.knowledge-card{min-width:0}.preview-grid article{scroll-margin-top:20px}@media(max-width:700px){.preview-grid{grid-template-columns:1fr}}</style>
 <main><header><h1>知识卡配图</h1><nav><a href="?narrated=1#k12">角色讲解预览</a>　<a href="?">图鉴预览</a>　<a href="./">返回游戏 →</a></nav></header><div class="preview-grid" id="cards"></div></main>
 <script type="module">import{initPhotoViewer}from"./src/photo-viewer.mjs";initPhotoViewer();import{CARDS,cardHTML}from'./src/astronomy.mjs';document.querySelector('#cards').innerHTML=CARDS.map(c=>`<section id="k${c.id}">${cardHTML(c.id,{narrated:new URLSearchParams(location.search).has("narrated")})}</section>`).join('');</script>
 </html>

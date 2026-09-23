@@ -2,21 +2,21 @@
 
 ## 移动信号粉彩美术
 
-第二版使用 `assets/signal-crayon-texture.png`，以粗纸颗粒、干笔蜡笔纹替代旧的亮面高光和渐变。信号外接半径统一为 26，光环中心线半径 28、宽度 4，内圈半径恰为 26；空心轮廓半径 24、圆角描边宽度 4，外角同样接触内圈。光环增加暖色底层以便圆形目标仍能辨别有无光环。
+第二版使用 `assets/signal-crayon-texture.webp`（2026-09-23 由 1254px PNG 缩为 512px WebP，图案只以 64 单位平铺，画面无差别），以粗纸颗粒、干笔蜡笔纹替代旧的亮面高光和渐变。信号外接半径统一为 26，光环中心线半径 28、宽度 4，内圈半径恰为 26；空心轮廓半径 24、圆角描边宽度 4，外角同样接触内圈。光环增加暖色底层以便圆形目标仍能辨别有无光环。
 
-`assets/signal-crayon-texture.png` 为内置 image_gen 生成的象牙白油画棒与水粉纹理。`src/art.mjs` 用原有精确轮廓裁切纹理并按规则颜色着色，覆盖星形、圆形、三角形、方形、菱形和六边形。保留空心、光环与三角形朝向，游戏目标、关前示例及规则图标共用一套美术。可打开 `signal-art-preview.html` 查看颜色和变体。
+该纹理为内置 image_gen 生成的象牙白油画棒与水粉纹理（PNG 原件见 Git 历史）。`src/art.mjs` 用原有精确轮廓裁切纹理并按规则颜色着色，覆盖星形、圆形、三角形、方形、菱形和六边形。保留空心、光环与三角形朝向，游戏目标、关前示例及规则图标共用一套美术。可打开 `signal-art-preview.html` 查看颜色和变体。
 
 生成提示词要点：Full-bleed neutral ivory-white oil pastel and gouache pigment texture, subtle paper grain and broad crayon strokes, evenly lit, no objects, no text. Intended for clipping into small geometric collectible sprites and tinting to gameplay colors.
 
 ## 星小兔白兔立绘
 
-首页和首次结算知识讲解共用 `assets/solar-art-v1/bunny-white-moon.png`（1145 × 1374，透明 PNG）。内置 image_gen 根据用户参考图卡通化，随后按反馈改为白兔、缩小脚掌、调整脸型，最终把圆形吊坠改为金色月牙。保留红色飘带和挥手姿势；旧立绘已移除。图鉴不添加角色。
+首页和首次结算知识讲解共用 `assets/solar-art-v1/bunny-white-moon.webp`（由 1145 × 1374 透明 PNG 缩为 640 宽透明 WebP，PNG 原件见 Git 历史）。内置 image_gen 根据用户参考图卡通化，随后按反馈改为白兔、缩小脚掌、调整脸型，最终把圆形吊坠改为金色月牙。保留红色飘带和挥手姿势；旧立绘已移除。图鉴不添加角色。
 
 最终编辑提示：Replace ONLY the round gold medallion with a small warm golden crescent moon pendant, no circular backing. Preserve white fur, face, pink cheeks, ears, small feet, waving pose, red flowing ribbon, proportions, hand-painted texture and transparent alpha background.
 
 ## 绘本风背景更新
 
-当前背景为 `assets/galaxy-pastel.png`（1672 × 941），使用内置 image_gen 生成。参考用户提供的三张图片的蜡笔、油画棒纸张纹理及蓝黄配色，重新构图为横向星空：左下行星地平线与小型观测站、右上月牙，中间保留暗蓝留白供游戏内容显示。无文字、水印或内嵌角色。只保留当前背景。生成原图：`C:/Users/24510/.codex/generated_images/01a09c8f-e3f8-7241-a555-33359dd191c5/exec-457321ba-c72f-426c-b9cb-2a53f3182b89.png`。
+当前背景为 `assets/galaxy-pastel.webp`（1672 × 941，2026-09-23 由同尺寸 PNG 转为 WebP，约 2.7MB → 0.4MB），使用内置 image_gen 生成。参考用户提供的三张图片的蜡笔、油画棒纸张纹理及蓝黄配色，重新构图为横向星空：左下行星地平线与小型观测站、右上月牙，中间保留暗蓝留白供游戏内容显示。无文字、水印或内嵌角色。只保留当前背景。生成原图：`C:/Users/24510/.codex/generated_images/01a09c8f-e3f8-7241-a555-33359dd191c5/exec-457321ba-c72f-426c-b9cb-2a53f3182b89.png`。
 
 提示词要点：Wide 16:9 storybook game background; wax crayon and oil pastel grain on paper, loose gouache strokes, chalky pale yellow and rich cobalt blue, quiet magical bedtime mood. Blue planetary horizon and tiny observatory at lower left, pale yellow crescent at upper-right edge, sparse handmade stars. Central 70% calm dark indigo negative space. No photorealism, glossy 3D, UI, lettering, watermark, or rabbit baked into the background.
 
@@ -44,3 +44,10 @@ Use case: stylized-concept. Asset type: isolated transparent PNG hero spacecraft
 K25 银河系位置改用 NASA/JPL-Caltech PIA10748 科学示意图，并根据官方标注版叠加中文太阳系位置。未解锁缩略图与结算图同步使用，来源与图片位于 `assets/knowledge/`。
 
 K04 替换简笔卫星与着陆器：使用鹊桥二号官方效果图和嫦娥六号月背实拍，保留通信关系连线，图旁标注来源及影像类型。
+
+## 2026-09-23 界面美术
+
+- `assets/paper-grain.webp`：由信号蜡笔纹理的亮度生成的白色笔触（最高约 6% 不透明度），叠在面板、卡片与弹窗上形成纸面颗粒。
+- 代码绘制（`src/art.mjs`）：月牙品牌标志（也用作网页图标与加载画面）、结算星星（复用信号的蜡笔着色）、五枚章节纪念章（地球与月球、太阳、火星与两颗卫星、土星、远方星光）以及线性图标。改色或改形直接改代码，无需重新生成图片。
+- 首页舷窗里的轨道与探测器、结尾的行星公转均为 SVG 动画。
+- 全部组件可在 `ui-kit-preview.html` 查看，使用规则见 `DESIGN.md`。

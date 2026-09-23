@@ -27,10 +27,15 @@ function relayDiagram() {
   return `<div class="relay-photos">${photo('relay')}${photo('lander')}</div>` + illustration(svg('地球与月背的嫦娥六号经鹊桥二号中继通信', `${body('earth',0,12,66)}<path d="M94 42h111m177 0h110" fill="none" stroke="#e8cf94" stroke-width="2"/><path d="M94 42l8-5m-8 5 8 5m103-5-8-5m8 5-8 5M382 42l8-5m-8 5 8 5m110-5-8-5m8 5-8 5" fill="none" stroke="#e8cf94" stroke-width="2"/>${label(33,99,'地球', '#e6eff0',14)}${label(294,46,'鹊桥二号','#f3d493',20)}${label(294,78,'中继通信','#abc7d4',14)}${body('moon',507,6,77)}${label(548,99,'月球背面','#e6eff0',13)}`, '0 0 600 115'));
 }
 
-export function solarOrbitDiagram({ showLabels = true } = {}) {
+export function solarOrbitDiagram({ showLabels = true, animated = false } = {}) {
   const ids = ['mercury','venus','earth','mars','jupiter','saturn','uranus','neptune-ringless'];
   const names = ['水星','金星','地球','火星','木星','土星','天王星','海王星'];
-  return svg('太阳和围绕太阳运行的八大行星', `${[49,71,94,117,145,175,207,237].map(r=>`<ellipse cx="300" cy="116" rx="${r}" ry="${r*.39}" fill="none" stroke="#8ca8c1" stroke-opacity=".3"/>`).join('')}${body('sun',271,87,58)}${showLabels ? label(300,155,'太阳','#f3d493',13) : ''}${ids.map((id,i)=>{const a=[3.2,5.6,1.05,3.7,.2,2.5,5.1,3.05][i], r=[49,71,94,117,145,175,207,237][i], x=300+Math.cos(a)*r, y=116+Math.sin(a)*r*.39, s=[17,22,23,20,40,50,32,30][i];return `${body(id,x-s/2,y-s/2,s)}${showLabels ? label(x,y+s/2+16,names[i],'#e4eaf0',12) : ''}`;}).join('')}${showLabels ? label(300,253,'八大行星围绕太阳公转','#adcbd6',14) : ''}`);
+  // Animated planets follow their ellipses; inner orbits are faster, roughly like Kepler's third law.
+  const orbiting = (id, a, r, s) => {
+    const dur = 0.0204 * r ** 1.5, ry = r * .39;
+    return `<g>${body(id,-s/2,-s/2,s)}<animateMotion dur="${dur.toFixed(2)}s" begin="${(-dur * a / (2 * Math.PI)).toFixed(2)}s" repeatCount="indefinite" path="M${300+r} 116A${r} ${ry} 0 1 1 ${300-r} 116A${r} ${ry} 0 1 1 ${300+r} 116"/></g>`;
+  };
+  return svg('太阳和围绕太阳运行的八大行星', `${[49,71,94,117,145,175,207,237].map(r=>`<ellipse cx="300" cy="116" rx="${r}" ry="${r*.39}" fill="none" stroke="#8ca8c1" stroke-opacity=".3"/>`).join('')}${body('sun',271,87,58)}${showLabels ? label(300,155,'太阳','#f3d493',13) : ''}${ids.map((id,i)=>{const a=[3.2,5.6,1.05,3.7,.2,2.5,5.1,3.05][i], r=[49,71,94,117,145,175,207,237][i], x=300+Math.cos(a)*r, y=116+Math.sin(a)*r*.39, s=[17,22,23,20,40,50,32,30][i];return animated ? orbiting(id, a, r, s) : `${body(id,x-s/2,y-s/2,s)}${showLabels ? label(x,y+s/2+16,names[i],'#e4eaf0',12) : ''}`;}).join('')}${showLabels ? label(300,253,'八大行星围绕太阳公转','#adcbd6',14) : ''}`);
 }
 
 export function milkyWayDiagram() {

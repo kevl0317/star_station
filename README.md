@@ -23,15 +23,18 @@
 - `src/flight-levels.mjs`：更新前的关卡玩法配置与示例。
 - `src/levels.mjs`：将旧玩法配置与现有太阳系任务、观测天体关联。
 - `src/engine.mjs`：信号调度、判断、计分及存档。
-- `src/renderer.mjs`：移动轨迹、飞船接收曲线。
-- `src/observatory.css`：参考山海食谱铺的信息层次，统一首页章节卡、按钮、关前规则、图鉴与结算面板的展示。
+- `src/renderer.mjs`：移动轨迹、飞船接收曲线与画布特效（星点、命中粒子、庆祝星雨）。
+- `src/theme.css`、`src/cards.css`、`src/screens.css`、`src/motion.css`：设计变量与通用组件、知识卡与星图、各页面布局、动效。
+- `src/art.mjs`：信号、星星、纪念章、品牌标志与图标等代码绘制的美术。
 - `src/astronomy.mjs`、`assets/solar-art-v1/`：知识卡和生成美术。
-- `ART.md`：素材来源与提示词记录。
+- `DESIGN.md`：界面与美术规范；`ART.md`：素材来源与提示词记录。
 
 尚未部署公网、接入账号云存档或微信小游戏 SDK。
 
 `docs/` 保留本机需求文档，不纳入 Git；游戏运行不依赖该目录。
 
-开发检查：`signal-art-preview.html` 预览飞行信号，`knowledge-art-preview.html` 预览全部知识卡；`node scripts/check-assets.mjs` 检查素材缺失与未使用文件。
+开发检查：`signal-art-preview.html` 预览飞行信号，`knowledge-art-preview.html` 预览全部知识卡，`ui-kit-preview.html` 预览界面组件；`node scripts/check-assets.mjs` 检查素材缺失与未使用文件。
 
 2026-09-19 界面整理：首页按观测场景、章节选择、本章五关分层展示；太阳系星图保留在可展开区域。支持浏览未开启章节的任务，开始关卡仍遵守原有解锁顺序。手机章节条保留选中位置，结算在中小屏采用单列。关卡配置、计分、练习时序和存档格式未变。
+
+2026-09-23 美术与动效重构：界面改为以背景画为基调的“绘本星夜”风格，三层互相覆盖的旧样式合并为四个分工明确的样式文件，规范写入 `DESIGN.md`。首页改为观测舷窗与纪念章进度；游戏判定提示移到底栏、倒计时不再遮挡规则；结算加入星星盖章、分数滚动与观测图像补全，章节完成加入纪念章，结尾实现太阳系缩放到银河系的动画（均可跳过，并支持减少动态效果）。背景、蜡笔纹理与小兔三张大图改用 WebP，由约 7.5MB 降到约 0.6MB。信号美术、关卡配置、计分与存档格式未变。

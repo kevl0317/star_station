@@ -1,5 +1,5 @@
 import { initPhotoViewer } from "./photo-viewer.mjs";
-import { endingHTML } from "./ending.mjs";
+import { endingHTML, COSMOS_CAPTIONS } from "./ending.mjs";
 import { isHidden } from "./engine.mjs";
 import { CHAPTERS, LEVELS, COLORS, ruleText, examples, mismatch } from "./levels.mjs";
 import {
@@ -13,7 +13,7 @@ import {
   bunnySVG,
 } from "./astronomy.mjs";
 import { Session, SAVE_KEY, readSave, unlocked, towerProgress, recordResult } from "./engine.mjs";
-import { icon, signalSVG, signalName, towerSVG } from "./art.mjs";
+import { icon, signalSVG, signalName, starSVG, badgeSVG } from "./art.mjs";
 import { WorldRenderer, positionOf } from "./renderer.mjs";
 import { GameAudio } from "./audio.mjs";
 initPhotoViewer();
@@ -42,7 +42,13 @@ let save = readSave(raw),
   toastUntil = 0;
 let lastRenderSecond = -1,
   celebrated = false;
-let homeChapter = 0;
+let homeChapter = 0,
+  targetTotal = 0;
+// Result, chapter and ending intros are timed here so any click can skip them.
+let introTimers = [],
+  introFinal = null,
+  countFrame = 0,
+  goTimer = 0;
 const reducedOS = matchMedia("(prefers-reduced-motion:reduce)").matches;
 const nodes = new Map(),
   audio = new GameAudio(),
@@ -57,6 +63,9 @@ const screens = {
   ending: "ending-screen",
 };
 const pct = (n) => (n === null ? "—" : `${(n * 100).toFixed(1)}%`);
+const buttonLabel = (text, name) => `${text}<b>${icon(name)}</b>`;
+const starRow = (stars) =>
+  [1, 2, 3].map((n) => `<i class="${n <= stars ? "on" : ""}">${icon("star")}</i>`).join("");
 function persist() {
   try {
     localStorage.setItem(storageKey, JSON.stringify(save));
@@ -86,15 +95,47 @@ function clearSignals() {
   nodes.clear();
   world.fx = [];
 }
+function later(ms, fn) {
+  introTimers.push(setTimeout(fn, ms));
+}
+function clearIntro() {
+  introTimers.forEach(clearTimeout);
+  introTimers = [];
+  cancelAnimationFrame(countFrame);
+  introFinal = null;
+  for (const id of ["result-screen", "chapter-screen"]) $(id).classList.remove("intro");
+}
+function skipIntro() {
+  if (screen === "ending") {
+    if ($("ending-cosmos")?.classList.contains("playing")) routeAction("skip-ending");
+    return;
+  }
+  const active = $(screens[screen]);
+  if (!active.classList.contains("intro")) return;
+  const finalize = introFinal;
+  clearIntro();
+  active.classList.add("skip-intro");
+  finalize?.();
+}
+function restart(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
 function show(which) {
+  const changed = which !== screen;
   screen = which;
   world.screen = which;
   $("game-root").dataset.screen = which;
   for (const [k, id] of Object.entries(screens)) $(id).hidden = k !== which;
   const chapter = LEVELS[selected - 1].chapter;
   $("game-root").style.setProperty("--chapter", CHAPTERS[chapter].color);
-  $("star-total").innerHTML =
-    `★ ${Object.values(save.stars).reduce((a, b) => a + b, 0)} <small>/ 75</small>`;
+  const total = Object.values(save.stars).reduce((a, b) => a + b, 0);
+  $("star-total").innerHTML = `${icon("star")}${total}<small>/ 75</small><em>星星</em>`;
+  $("star-total").setAttribute("aria-label", `已收集 ${total} 颗星星，每关最多 3 颗，25 关共 75 颗`);
+  $("star-total").title = "每关最多 3 颗星，25 关共 75 颗";
+  if (changed) $(screens[which]).scrollTop = 0;
+  $("game-root").classList.toggle("scrolled", $(screens[which]).scrollTop > 8);
 }
 function levelButton(l) {
   const locked = l.id > unlocked(save);
@@ -106,12 +147,15 @@ function chapterRoutes() {
   return `<div class="journey-heading"><h2>观测航线</h2><div class="journey-progress"><span><strong>${complete}</strong> / 25 关</span><progress value="${complete}" max="25" aria-label="已通关关卡"></progress></div></div><div class="chapter-tabs" role="group" aria-label="选择观测章节">${CHAPTERS.map((chapter, i) => {
     const levels = LEVELS.filter((l) => l.chapter === i);
     const done = levels.filter((l) => save.stars[l.id]).length;
-    return `<button class="chapter-tab ${i === homeChapter ? "active" : ""}" data-action="select-chapter" data-chapter="${i}" aria-pressed="${i === homeChapter}"><span class="chapter-number">0${i + 1}</span><span><strong>${chapter.name}</strong><small>${done}/5</small></span></button>`;
-  }).join("")}</div><div class="mission-cards">${LEVELS.filter(l => l.chapter === homeChapter).map(l => {
+    const locked = levels[0].id > open;
+    return `<button class="chapter-tab ${i === homeChapter ? "active" : ""} ${locked ? "locked" : ""}" style="--c:${chapter.color}" data-action="select-chapter" data-chapter="${i}" aria-pressed="${i === homeChapter}" aria-label="第${i + 1}章 ${chapter.name}，已完成 ${done}/5${locked ? "，未开启" : ""}"><span class="chapter-number">0${i + 1}</span><span class="chapter-tab-text"><strong>${chapter.name}${locked ? icon("lock") : ""}</strong><span class="chapter-pips" aria-hidden="true">${levels.map((l) => `<i class="${save.stars[l.id] ? "on" : ""}"></i>`).join("")}</span></span></button>`;
+  }).join("")}</div><div class="mission-cards">${LEVELS.filter(l => l.chapter === homeChapter).map((l, index) => {
     const stars = save.stars[l.id] || 0;
     const locked = l.id > open;
-    const status = locked ? `通关第 ${l.id - 1} 关后开启` : stars ? "再次观测 ↗" : "开始观测 →";
-    return `<button class="mission-card ${stars ? "passed" : ""} ${!stars && !locked ? "current" : ""}" data-action="level" data-level="${l.id}" ${locked ? "disabled" : ""} ${!stars && !locked ? 'aria-current="step"' : ""} aria-label="第${l.id}关 ${l.name}，${locked ? status : stars ? `${stars}星，再次观测` : "当前关卡，开始观测"}"><span class="mission-card-top">第 ${String(l.id).padStart(2, "0")} 关 <small>${l.checkpoint ? "验收" : bodyInfo(l.body).name}</small></span><div class="mission-card-art" aria-hidden="true">${planetSVG(l.body)}</div><strong>${l.name}</strong><span class="mission-card-bottom"><span class="mission-stars" aria-hidden="true">${"★".repeat(stars)}<i>${"☆".repeat(3 - stars)}</i></span><small>${locked ? "未解锁" : stars ? "重玩 ↗" : "开始 →"}</small></span></button>`;
+    const current = !stars && !locked;
+    const status = locked ? `通关第 ${l.id - 1} 关后开启` : stars ? `${stars}星，再次观测` : "当前关卡，开始观测";
+    const action = locked ? `${icon("lock")}未解锁` : stars ? `${icon("replay")}重玩` : `开始${icon("play")}`;
+    return `<button class="mission-card ${stars ? "passed" : ""} ${current ? "current" : ""}" style="--c:${CHAPTERS[l.chapter].color};--i:${index}" data-action="level" data-level="${l.id}" ${locked ? "disabled" : ""} ${current ? 'aria-current="step"' : ""} aria-label="第${l.id}关 ${l.name}，${status}"><span class="mission-card-top"><span class="mission-no">${String(l.id).padStart(2, "0")}</span><small class="mission-tag ${l.checkpoint ? "checkpoint" : ""}">${l.checkpoint ? `${icon("star")}验收` : bodyInfo(l.body).name}</small></span><span class="mission-card-art" aria-hidden="true">${planetSVG(l.body)}${locked ? `<span class="mission-lock">${icon("lock")}</span>` : ""}</span><strong class="mission-name">${l.name}</strong><span class="mission-card-bottom"><span class="mission-stars" aria-hidden="true">${starRow(stars)}</span><span class="mission-cta">${action}</span></span></button>`;
   }).join("")}</div>`;
 }
 function renderHomeJourney(preserveScroll = false) {
@@ -141,12 +185,13 @@ function bodyDetail(id) {
     levels = levelsForBody(id);
   modal(
     b.name,
-    `<div class="body-detail-art">${planetSVG(id)}</div><p>${b.type}</p><div class="body-levels">${levels.map((l) => `<div>${levelButton(l)}<span>第 ${l.id} 关 · ${l.name}</span></div>`).join("")}</div><button class="action-button outline" data-action="atlas" data-body="${id}">查看知识卡</button>`,
+    `<div class="body-detail-art">${planetSVG(id)}</div><p>${b.type}</p><div class="body-levels">${levels.map((l) => `<div>${levelButton(l)}<span>第 ${l.id} 关 · ${l.name}</span></div>`).join("")}</div><button class="action-button outline" data-action="atlas" data-body="${id}">${buttonLabel("查看知识卡", "book")}</button>`,
     "body",
   );
 }
 function atlas(filter = "all") {
   if (screen === "game") pause();
+  clearIntro();
   closeModal();
   audio.stop();
   clearSignals();
@@ -154,7 +199,8 @@ function atlas(filter = "all") {
   practice = null;
   countdown = null;
   show("atlas");
-  $("atlas-count").textContent = `${save.cards.length} / 25 已收藏`;
+  $("atlas-count").innerHTML =
+    `<span><strong>${save.cards.length}</strong> / 25 已收藏</span><progress value="${save.cards.length}" max="25" aria-label="已收藏知识卡"></progress>`;
   $("atlas-solar").innerHTML = solarChart();
   const filters = [
     ["all", "全部"],
@@ -174,11 +220,13 @@ function atlas(filter = "all") {
         ? c.kind === "真实探索"
         : c.body === filter || (filter === "earth" && c.body === "earthmoon")),
   );
+  // --i staggers the first cards' entrance; later ones share the last delay.
   $("atlas-cards").innerHTML = cards
-    .map((c) =>
-      save.cards.includes(c.id)
+    .map((c, i) =>
+      (save.cards.includes(c.id)
         ? cardHTML(c.id)
-        : `<article class="knowledge-card locked"><span>${c.code} · ${bodyInfo(c.body).name}</span>${c.id === 25 ? galaxySVG() : planetSVG(c.body)}<strong>${c.title}</strong><p>第 ${c.id} 关通关后收藏</p></article>`,
+        : `<article class="knowledge-card locked"><span>${c.code} · ${bodyInfo(c.body).name}</span>${c.id === 25 ? galaxySVG() : planetSVG(c.body)}<strong>${c.title}</strong><p>${icon("lock")}第 ${c.id} 关通关后收藏</p></article>`
+      ).replace("<article ", `<article style="--i:${Math.min(i, 8)}" `),
     )
     .join("");
 }
@@ -192,6 +240,7 @@ function renderPracticeStep() {
     });
 }
 function home() {
+  clearIntro();
   closeModal();
   audio.stop();
   session = null;
@@ -202,17 +251,22 @@ function home() {
   const l = LEVELS[selected - 1];
   homeChapter = l.chapter;
   show("home");
-  $("continue-label").textContent = LEVELS.every(l => save.stars[l.id]) ? "重温旅程结尾" : Object.keys(save.stars).length ? "继续旅程" : "开始旅程";
+  const finished = LEVELS.every((l) => save.stars[l.id]);
+  $("continue-label").textContent = finished ? "重温旅程结尾" : Object.keys(save.stars).length ? "继续旅程" : "开始旅程";
   $("hero-planet").innerHTML = planetSVG(l.body);
   $("hero-body-name").textContent = bodyInfo(l.body).name;
-  $("home-towers").innerHTML = CHAPTERS.map(
-    (c, i) =>
-      `<div class="home-tower" role="img" title="${c.tower}，${towerProgress(save, i)}/5" aria-label="${c.tower}，${towerProgress(save, i)}/5"><div aria-hidden="true">${towerSVG(towerProgress(save, i), c.color)}</div></div>`,
-  ).join("");
+  $("hero-mission").textContent = finished ? "" : `第 ${String(l.id).padStart(2, "0")} 关 · ${l.name}`;
+  $("home-towers").innerHTML =
+    "<strong>纪念章</strong>" +
+    CHAPTERS.map((c, i) => {
+      const done = towerProgress(save, i);
+      return `<div class="home-badge ${done === 5 ? "earned" : ""}" role="img" title="${c.badge}，${c.tower} ${done}/5" aria-label="${c.badge}，${c.tower} ${done}/5">${badgeSVG(i, done === 5)}<small>${done}/5</small></div>`;
+    }).join("");
   renderHomeJourney();
 }
 function briefing(id) {
   if (id > unlocked(save) || id < 1 || id > 25) return;
+  clearIntro();
   closeModal();
   audio.stop();
   session = null;
@@ -224,7 +278,7 @@ function briefing(id) {
   show("briefing");
   $("briefing-number").textContent = `第 ${id} 关`;
   $("briefing-title").textContent = l.name;
-  $("briefing-rule").textContent = `只点：${ruleText(l.rule)}`;
+  $("briefing-rule").innerHTML = `<span class="rule-label">只点</span><span>${esc(ruleText(l.rule))}</span>`;
   $("briefing-details").open = false;
   $("briefing-demo").textContent = l.demo;
   $("briefing-tower").innerHTML = planetSVG(l.body);
@@ -238,11 +292,11 @@ function briefing(id) {
   $("examples").innerHTML = examples(l)
     .map(
       (s, i) =>
-        `<div class="example">${mustPractice ? `<button data-action="practice" data-index="${i}" aria-label="练习：${signalName(s)}">${signalSVG(s)}</button>` : signalSVG(s)}<span class="example-cue ${s.target ? "yes" : "no"}" role="img" aria-label="${s.target ? "点击目标" : "忽略干扰"}">${icon(s.target ? "accept" : "ignore")}</span></div>`,
+        `<div class="example">${mustPractice ? `<button data-action="practice" data-index="${i}" aria-label="练习：${signalName(s)}">${signalSVG(s)}</button>` : signalSVG(s)}<span class="example-cue ${s.target ? "yes" : "no"}">${icon(s.target ? "accept" : "ignore")}<span>${s.target ? "点一下" : "不点"}</span></span></div>`,
     )
     .join("");
   $("ready").disabled = mustPractice;
-  $("ready").innerHTML = mustPractice ? "先完成练习" : "我会了 <b>➜</b>";
+  $("ready").innerHTML = mustPractice ? "先完成练习" : buttonLabel("我会了", "arrow");
   $("practice-hint").className = "practice-hint";
   $("practice-hint").textContent = mustPractice ? "练习 1 / 3 · 5 秒" : "";
   renderPracticeStep();
@@ -252,17 +306,21 @@ function practiceClick(index) {
   if (!practice || practice.remaining <= 0) return;
   if (index !== practice.cursor) return;
   const s = practice.examples[index],
-    button = $("examples").querySelector(`[data-index="${index}"]`);
+    button = $("examples").querySelector(`[data-index="${index}"]`),
+    example = button.closest(".example");
   if (s.target) {
     if (practice.hit.has(index)) return;
     practice.hit.add(index);
     button.disabled = true;
     button.classList.add("confirmed");
+    example.classList.add("confirmed");
     audio.play("hit");
   } else {
     practice.failed = true;
     button.classList.add("wrong");
-    $("practice-hint").className = "practice-hint wrong";
+    restart(example, "wrong");
+    $("practice-hint").className = "practice-hint";
+    restart($("practice-hint"), "wrong");
     $("practice-hint").textContent = "再试一次";
     audio.play("error");
   }
@@ -278,6 +336,11 @@ function tickPractice(dt) {
     practice.cursor++;
   }
   renderPracticeStep();
+  // Each example gets its own little timer bar.
+  const step = (5 - practice.remaining - practice.cursor * (5 / 3)) / (5 / 3);
+  $("examples")
+    .querySelectorAll(".example")
+    [practice.cursor]?.style.setProperty("--step", Math.max(0, Math.min(1, step)).toFixed(3));
   if (practice.remaining > 0) {
     if (before !== Math.ceil(practice.remaining) && !practice.failed)
       $("practice-hint").textContent =
@@ -292,15 +355,40 @@ function tickPractice(dt) {
     $("practice-hint").className = "practice-hint";
     $("practice-hint").textContent = "";
     $("ready").disabled = false;
-    $("ready").innerHTML = "我会了 <b>➜</b>";
+    $("ready").innerHTML = buttonLabel("我会了", "arrow");
     practice = null;
   } else {
     practice = null;
     $("practice-hint").className = "practice-hint wrong";
     $("practice-hint").textContent = "再试一次";
     $("ready").disabled = false;
-    $("ready").textContent = "重新练习";
+    $("ready").innerHTML = buttonLabel("重新练习", "replay");
   }
+}
+// Tiles light up in a scattered order, like pieces of a puzzle.
+function observationHTML(body, count, restored = 0) {
+  const rows = Math.max(1, Math.round(Math.sqrt(count / 1.15)));
+  const order = Array.from({ length: count }, (_, i) => i).sort((a, b) => ((a * 41) % 101) - ((b * 41) % 101));
+  const rank = new Map(order.map((tile, n) => [tile, n]));
+  let index = 0;
+  const tiles = Array.from({ length: rows }, (_, row) => {
+    const n = Math.floor(count / rows) + (row < count % rows ? 1 : 0);
+    return `<div class="observation-tile-row">${Array.from({ length: n }, () => {
+      const r = rank.get(index++);
+      return `<i data-rank="${r}" class="${r < restored ? "restored" : ""}"></i>`;
+    }).join("")}</div>`;
+  }).join("");
+  return `<div class="observation-image">${planetSVG(body)}<div class="observation-tiles">${tiles}</div></div>`;
+}
+function restoreTiles(hits, root) {
+  root
+    .querySelectorAll(".observation-tiles i")
+    .forEach((tile) => tile.classList.toggle("restored", Number(tile.dataset.rank) < hits));
+}
+function setCountdown(text) {
+  const number = $("countdown").querySelector("strong");
+  number.textContent = text;
+  restart(number, "tick");
 }
 function start() {
   const l = LEVELS[selected - 1];
@@ -308,6 +396,7 @@ function start() {
     briefing(selected);
     return;
   }
+  clearIntro();
   closeModal();
   audio.unlock();
   audio.play("launch");
@@ -325,30 +414,27 @@ function start() {
   $("play-name").textContent = l.name;
   $("scanners").innerHTML = "";
   $("environment-clouds").hidden = !(l.backgroundClouds || l.backgroundDust);
-  $("active-rule").innerHTML = l.rule
-    .map((r) => {
-      const sample = examples({ ...l, rule: [r] })[0];
-      return `<span class="rule-symbol">${signalSVG(sample)}</span><span>${esc(ruleText([r]))}</span>`;
-    })
-    .join("<span>或</span>");
+  const samples = l.rule.map((r) => signalSVG(examples({ ...l, rule: [r] })[0]));
+  $("active-rule").innerHTML =
+    '<span class="rule-label">只点</span>' +
+    l.rule
+      .map((r, i) => `<span class="rule-symbol">${samples[i]}</span><span>${esc(ruleText([r]))}</span>`)
+      .join('<span class="rule-or">或</span>');
+  clearTimeout(goTimer);
+  $("countdown").className = "countdown";
   $("countdown").hidden = false;
-  $("countdown").querySelector("strong").textContent = "3";
-  $("countdown-rule").textContent = ruleText(l.rule);
+  setCountdown("3");
+  $("countdown-rule").innerHTML =
+    l.rule.map((r) => `<span class="rule-symbol">${signalSVG(examples({ ...l, rule: [r] })[0])}</span>`).join("") +
+    `<span>只点：${esc(ruleText(l.rule))}</span>`;
   $("judgment").className = "judgment";
   $("judgment").textContent = "";
   $("combo").className = "combo";
   $("hits").textContent = "0";
-  const targetCount = session.schedule.filter((s) => s.target).length;
-  const tileRows = Math.max(1, Math.round(Math.sqrt(targetCount / 1.15)));
-  const tiles = Array.from({ length: tileRows }, (_, row) => {
-    const count = Math.floor(targetCount / tileRows) + (row < targetCount % tileRows ? 1 : 0);
-    return `<div class="observation-tile-row">${"<i></i>".repeat(count)}</div>`;
-  }).join("");
-  $("play-tower").innerHTML =
-    `<div class="observation-image">${planetSVG(l.body)}<div class="observation-tiles">${tiles}</div></div>`;
+  targetTotal = session.schedule.filter((s) => s.target).length;
+  $("play-tower").innerHTML = observationHTML(l.body, targetTotal);
   $("play-tower-name").textContent = bodyInfo(l.body).name;
-  $("repair-segments").innerHTML =
-    `<span id="image-progress">0 / ${targetCount}</span>`;
+  $("repair-segments").innerHTML = `<span id="image-progress">0 / ${targetTotal}</span>`;
   updateTime();
   last = performance.now();
   lastRenderSecond = -1;
@@ -403,6 +489,13 @@ function renderSignals() {
     node.dust.style.transform = `translate(${pos.x - coverWidth / 2}px,${pos.y - size / 2}px) rotate(${s.id % 2 ? -7 : 7}deg)`;
   }
 }
+function showJudgment(text, good) {
+  const el = $("judgment"),
+    again = el.classList.contains("visible");
+  el.innerHTML = `${icon(good ? "check" : "close")}<span>${text}</span>`;
+  el.className = good ? "judgment visible" : "judgment visible error";
+  if (again) restart(el, "bump");
+}
 function consume() {
   for (const e of session.events.splice(0)) {
     if (e.kind === "rejections") continue;
@@ -415,30 +508,24 @@ function consume() {
       node.dust?.remove();
       nodes.delete(e.signal.id);
     }
-    $("judgment").textContent = good
-      ? "接收成功"
-      : e.kind === "misses"
-        ? "目标漏接"
-        : mismatch(e.signal, session.level.rule);
-    $("judgment").className = good ? "judgment visible" : "judgment visible error";
+    showJudgment(
+      good ? "接收成功" : e.kind === "misses" ? "目标漏接" : mismatch(e.signal, session.level.rule),
+      good,
+    );
     feedbackUntil = session.elapsed + 0.8;
     audio.play(good ? "hit" : "error");
-    $("hits").textContent = session.stats.hits;
-    $("image-progress").textContent =
-      `${session.stats.hits} / ${session.schedule.filter((s) => s.target).length}`;
-    $("play-tower")
-      .querySelectorAll(".observation-tiles i")
-      .forEach((tile, i) =>
-        tile.classList.toggle(
-          "restored",
-          i < session.stats.hits,
-        ),
-      );
+    if (good) {
+      $("hits").textContent = session.stats.hits;
+      restart($("hits"), "bump");
+      restoreTiles(session.stats.hits, $("play-tower"));
+      restart($("play-tower").querySelector(".observation-image"), "pulse");
+    }
+    $("image-progress").textContent = `${session.stats.hits} / ${targetTotal}`;
     $("scanners").classList.toggle("accepted", good);
   }
   const streak = session.stats.streak;
   if (streak >= 5) {
-    $("combo").innerHTML = `${streak}<small>连续正确</small>`;
+    $("combo").innerHTML = `<small>连续正确</small><b>${streak}</b>`;
     $("combo").className = "combo visible";
   } else $("combo").className = "combo";
 }
@@ -450,56 +537,109 @@ function clickSignal(id) {
   consume();
   renderSignals();
 }
+function countUp(el, to, duration) {
+  const begin = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, Math.max(0, (now - begin) / duration));
+    el.textContent = Math.round(to * (1 - (1 - t) ** 3));
+    if (t < 1) countFrame = requestAnimationFrame(step);
+  };
+  countFrame = requestAnimationFrame(step);
+}
 function finish() {
+  clearIntro();
   audio.stop();
   clearSignals();
   countdown = null;
   $("countdown").hidden = true;
   const r = session.result(),
-    l = session.level;
+    l = session.level,
+    hits = session.stats.hits;
 
   save = recordResult(save, session);
   persist();
+  $("result-screen").classList.remove("skip-intro");
   show("result");
+  $("result-screen").classList.toggle("passed", r.passed);
   $("result-kicker").textContent = `第 ${l.id} 关 · ${l.name}`;
   $("result-stars").innerHTML = [1, 2, 3]
-    .map((n) => `<span class="${n <= r.stars ? "earned" : ""}">★</span>`)
+    .map((n) => `<span class="${n <= r.stars ? "earned" : ""}" style="--i:${n}">${starSVG(n <= r.stars)}</span>`)
     .join("");
+  $("result-stars").setAttribute("role", "img");
+  $("result-stars").setAttribute("aria-label", `获得 ${r.stars} 颗星`);
   $("result-title").textContent = r.passed ? "信号接通" : "再试一次";
   $("result-details").open = false;
   $("result-card").hidden = false;
   $("result-card").innerHTML = cardHTML(l.id, { narrated: true });
   document.querySelector(".result-content").classList.remove("without-card");
-  $("result-score").textContent = r.clarity ?? 0;
-  $("score-ring").style.strokeDashoffset = 490 * (1 - (r.clarity ?? 0) / 100);
+  $("result-observation").innerHTML = observationHTML(l.body, targetTotal, hits);
   $("result-hit").textContent = pct(r.hitRate);
   $("result-reject").textContent = pct(r.rejectionRate);
   $("next").hidden = !r.passed;
-  $("next").innerHTML = l.id === 25 ? "完成旅程 <b>➜</b>" : l.checkpoint ? "章节验收 <b>➜</b>" : "下一关 <b>➜</b>";
+  $("next").innerHTML = buttonLabel(l.id === 25 ? "完成旅程" : l.checkpoint ? "章节验收" : "下一关", "arrow");
   celebrated = false;
+  resultIntro(r);
   if (r.passed) {
     audio.play("win");
     world.celebrate(CHAPTERS[l.chapter].color);
   } else audio.play("error");
 }
+// Stars stamp in, the clarity ring fills and, on a pass, the last tiles fly away.
+function resultIntro(r) {
+  const score = r.clarity ?? 0,
+    ring = $("score-ring"),
+    offset = 490 * (1 - score / 100);
+  const tiles = () => $("result-observation").querySelectorAll(".observation-tiles i:not(.restored)");
+  introFinal = () => {
+    ring.style.strokeDashoffset = offset;
+    $("result-score").textContent = score;
+    if (r.passed) tiles().forEach((tile) => tile.classList.add("restored"));
+  };
+  ring.style.transition = "none";
+  ring.style.strokeDashoffset = 490;
+  void ring.getBoundingClientRect();
+  ring.style.transition = "";
+  if (reducedOS) {
+    introFinal();
+    introFinal = null;
+    return;
+  }
+  $("result-screen").classList.add("intro");
+  $("result-score").textContent = "0";
+  later(420, () => {
+    ring.style.strokeDashoffset = offset;
+    countUp($("result-score"), score, 1200);
+  });
+  for (let n = 1; n <= r.stars; n++) later(500 + n * 240, () => audio.play("star"));
+  if (r.passed)
+    later(1150, () => {
+      [...tiles()]
+        .sort((a, b) => a.dataset.rank - b.dataset.rank)
+        .forEach((tile, i) => later(i * 55, () => tile.classList.add("restored")));
+    });
+  later(2600, () => {
+    $("result-screen").classList.remove("intro");
+    introFinal = null;
+  });
+}
 function chapter() {
+  clearIntro();
   const l = LEVELS[selected - 1],
     c = CHAPTERS[l.chapter];
+  $("chapter-screen").classList.remove("skip-intro");
   show("chapter");
   $("chapter-repaired").textContent = `第${["一", "二", "三", "四", "五"][l.chapter]}章完成`;
+  $("chapter-art").className = `chapter-art ${selected === 10 ? "wide" : ""}`;
   $("chapter-art").innerHTML =
     selected === 10
       ? `<div class="chapter-inner-planets">${["sun", "mercury", "venus"].map(id => `<div>${planetSVG(id)}<span>${bodyInfo(id).name}</span></div>`).join("")}</div>`
       : planetSVG(l.body);
-  $("chapter-network").innerHTML = CHAPTERS.map(
-    (c, i) =>
-      `<div class="chapter-stamp ${towerProgress(save, i) === 5 ? "earned" : ""}">✧<small>${c.badge}</small></div>`,
-  ).join("");
+  $("chapter-medal").innerHTML = badgeSVG(l.chapter, true);
+  $("chapter-network").innerHTML = CHAPTERS.map((c, i) => {
+    const earned = towerProgress(save, i) === 5;
+    return `<div class="chapter-stamp ${earned ? "earned" : ""} ${i === l.chapter ? "current" : ""}" role="img" aria-label="${c.badge}${earned ? "，已获得" : "，未获得"}">${badgeSVG(i, earned)}<small>${c.badge}</small></div>`;
+  }).join("");
   $("chapter-network").hidden = false;
-  $("chapter-network").style.setProperty(
-    "--network-progress",
-    `${(session.level.chapter / 4) * 100}%`,
-  );
   $("chapter-title").textContent =
     selected === 10
       ? "向阳观测，任务完成"
@@ -508,9 +648,18 @@ function chapter() {
     selected === 10
       ? "太阳、水星和金星的五项观测任务已完成，向阳观测节点全部接通！"
       : `${c.name}的五个观测节点已接通`;
-  $("chapter-badge").textContent = `✧ 获得徽章 · ${c.badge}`;
-  $("chapter-next").innerHTML = "继续旅程 <b>➜</b>";
+  $("chapter-badge").innerHTML = `${icon("sparkle")}获得徽章 · ${c.badge}`;
+  $("chapter-next").innerHTML = buttonLabel("继续旅程", "arrow");
   audio.play("repair");
+  if (!reducedOS) {
+    $("chapter-screen").classList.add("intro");
+    introFinal = () => {};
+    later(950, () => audio.play("badge"));
+    later(2400, () => {
+      $("chapter-screen").classList.remove("intro");
+      introFinal = null;
+    });
+  }
   world.celebrate(c.color);
   celebrated = true;
 }
@@ -521,13 +670,22 @@ function next() {
   else briefing(selected + 1);
 }
 function ending() {
+  clearIntro();
   audio.stop();
   clearSignals();
-  $("ending-screen").innerHTML = endingHTML(save);
+  $("ending-screen").innerHTML = endingHTML(save, { animated: !reducedOS });
   show("ending");
   $("ending-screen").scrollTop = 0;
+  if (!reducedOS) later(6300, settleEnding);
   audio.play("repair");
   world.celebrate("#edc994");
+}
+function settleEnding() {
+  const cosmos = $("ending-cosmos");
+  if (!cosmos || cosmos.classList.contains("settled")) return;
+  cosmos.classList.replace("playing", "settled");
+  $("cosmos-caption").textContent = COSMOS_CAPTIONS[1];
+  $("ending-screen").querySelector('[data-action="skip-ending"]')?.remove();
 }
 function modal(title, html, mode) {
   modalMode = mode;
@@ -547,7 +705,7 @@ function pause() {
   $("game-root").classList.add("paused");
   modal(
     "已暂停",
-    `<button class="action-button gold" data-action="resume">继续 <b>➜</b></button><button class="action-button outline" data-action="restart">重新开始</button><button class="action-button outline" data-action="settings">设置</button><button class="action-button outline" data-action="quit">返回主页</button>`,
+    `<button class="action-button gold" data-action="resume">${buttonLabel("继续", "play")}</button><button class="action-button outline" data-action="restart">${buttonLabel("重新开始", "replay")}</button><button class="action-button outline" data-action="settings">${buttonLabel("设置", "settings")}</button><button class="action-button outline" data-action="quit">${buttonLabel("返回主页", "home")}</button>`,
     "pause",
   );
 }
@@ -564,7 +722,7 @@ function settings() {
   if (screen === "game") pause();
   modal(
     "设置",
-    `<div class="setting-row"><span>声音</span><button data-action="sound" aria-label="声音" aria-pressed="${!save.muted}">${save.muted ? "已关闭" : "已开启"}</button></div><button class="action-button outline" data-action="help">玩法说明</button><button class="action-button outline" data-action="records">航行记录</button><button class="action-button outline" data-action="clear-records">清空本地记录</button><p class="settings-note">星级、收藏与航行记录自动保存在当前浏览器。</p>`,
+    `<div class="setting-row"><span>声音</span><button data-action="sound" aria-label="声音" aria-pressed="${!save.muted}">${save.muted ? "已关闭" : "已开启"}</button></div><button class="action-button outline" data-action="help">${buttonLabel("玩法说明", "help")}</button><button class="action-button outline" data-action="records">${buttonLabel("航行记录", "records")}</button><button class="action-button outline" data-action="clear-records">清空本地记录</button><p class="settings-note">星级、收藏与航行记录自动保存在当前浏览器。</p>`,
     "settings",
   );
 }
@@ -592,7 +750,7 @@ function help() {
   const l = LEVELS[selected - 1];
   modal(
     "认准图案",
-    `<p class="help-target">${esc(ruleText(l.rule))}</p>${signalGuide(l)}<details class="rule-details"><summary>规则详情</summary><p>点击符合规则的信号，飞出前接住它。</p><p>空格 / Esc 暂停。</p></details><button class="action-button gold" data-action="close">知道了</button>`,
+    `<p class="help-target"><span class="rule-label">只点</span>${esc(ruleText(l.rule))}</p>${signalGuide(l)}<details class="rule-details"><summary>规则详情</summary><p>点击符合规则的信号，飞出前接住它。</p><p>空格 / Esc 暂停。</p></details><button class="action-button gold" data-action="close">知道了</button>`,
     "help",
   );
 }
@@ -609,9 +767,9 @@ function records() {
           .slice(0, 25)
           .map(
             (r) =>
-              `<div class="log-row"><div>第 ${r.level} 关 · ${r.ruleVersion === 4 ? LEVELS[r.level - 1].name : "旧版记录"}<small>${pct(r.hitRate)} 接收 · ${pct(r.rejectionRate)} 识别 · ${r.passed ? "通过" : "重试"}</small></div><span>${r.clarity}</span></div>`,
+              `<div class="log-row ${r.passed ? "passed" : ""}"><div>第 ${r.level} 关 · ${r.ruleVersion === 4 ? LEVELS[r.level - 1].name : "旧版记录"}<small>${pct(r.hitRate)} 接收 · ${pct(r.rejectionRate)} 识别 · ${r.passed ? "通过" : "重试"}</small></div><span>${r.clarity}</span></div>`,
           )
-          .join("") + '<button class="action-button outline" data-action="export">导出记录</button>'
+          .join("") + `<button class="action-button outline" data-action="export">${buttonLabel("导出记录", "download")}</button>`
       : "<p>暂无记录</p>",
     "records",
   );
@@ -666,7 +824,7 @@ function routeAction(action, button) {
       pause();
       modal(
         "本关规则",
-        `<p class="help-target">只点：${esc(ruleText(session.level.rule))}</p>${signalGuide(session.level)}<details class="rule-details"><summary>规则详情</summary><p>${esc(session.level.demo)}</p></details><button class="action-button gold" data-action="resume">继续</button>`,
+        `<p class="help-target"><span class="rule-label">只点</span>${esc(ruleText(session.level.rule))}</p>${signalGuide(session.level)}<details class="rule-details"><summary>规则详情</summary><p>${esc(session.level.demo)}</p></details><button class="action-button gold" data-action="resume">${buttonLabel("继续", "play")}</button>`,
         "rules",
       );
       break;
@@ -716,6 +874,10 @@ function routeAction(action, button) {
       break;
     case "export":
       exportRecords();
+      break;
+    case "skip-ending":
+      clearIntro();
+      settleEnding();
       break;
   }
 }
@@ -768,6 +930,18 @@ $("modal").addEventListener("cancel", (e) => {
   e.preventDefault();
   routeAction("close");
 });
+// A tap anywhere skips the result and chapter intros (script: every result animation is skippable).
+$("game-root").addEventListener("pointerdown", () => {
+  if (screen === "result" || screen === "chapter") skipIntro();
+});
+for (const id of Object.values(screens))
+  $(id).addEventListener(
+    "scroll",
+    (e) => {
+      if (e.target.id === screens[screen]) $("game-root").classList.toggle("scrolled", e.target.scrollTop > 8);
+    },
+    { passive: true },
+  );
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space" && screen === "game" && !$("modal").open) {
     e.preventDefault();
@@ -775,6 +949,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   if (e.repeat) return;
+  if (!$("modal").open) skipIntro();
   if (e.code === "Escape" && !$("modal").open && screen === "game") {
     e.preventDefault();
     pause();
@@ -819,10 +994,16 @@ function frame(now) {
       countdown -= dt;
       if (countdown <= 0) {
         countdown = null;
-        $("countdown").hidden = true;
+        // A short "开始" flash; the overlay never blocks clicks.
+        $("countdown").classList.add("go");
+        setCountdown("开始");
+        goTimer = setTimeout(() => {
+          $("countdown").hidden = true;
+          $("countdown").classList.remove("go");
+        }, reducedOS ? 0 : 560);
         session.start();
       } else if (Math.ceil(countdown) !== before) {
-        $("countdown").querySelector("strong").textContent = Math.ceil(countdown);
+        setCountdown(Math.ceil(countdown));
         audio.play("count");
       }
     } else {
@@ -844,12 +1025,26 @@ function frame(now) {
   if (now > toastUntil) $("toast").classList.remove("visible");
   requestAnimationFrame(frame);
 }
+const bunnyLines = [
+  "嗨！一起接收星星的信号吧！",
+  "认准图案，再轻轻点一下哦。",
+  "每接收一个信号，观测图像就恢复一块！",
+  "累了就按暂停，休息一下再出发。",
+];
+let bunnyLine = 0,
+  bubbleTimer = 0;
 $("home-companion").innerHTML = bunnySVG;
 $("home-companion").addEventListener("click", () => {
-  const bunny = $("home-companion");
+  const bunny = $("home-companion"),
+    bubble = $("companion-bubble");
   bunny.classList.remove("greeting");
   void bunny.offsetWidth;
   bunny.classList.add("greeting");
+  bubble.textContent = bunnyLines[bunnyLine++ % bunnyLines.length];
+  void bubble.offsetWidth;
+  bubble.classList.add("visible");
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(() => bubble.classList.remove("visible"), 3400);
   audio.unlock();
   audio.play("click");
 });
@@ -858,9 +1053,11 @@ $("home-companion").addEventListener("animationend", (event) => {
     $("home-companion").classList.remove("greeting");
   }
 });
+document.querySelectorAll("[data-icon]").forEach((el) => (el.innerHTML = icon(el.dataset.icon)));
 $("fullscreen").innerHTML = icon("fullscreen");
 $("settings").innerHTML = icon("settings");
 $("pause").innerHTML = icon("pause");
+if (reducedOS) document.querySelectorAll("svg").forEach((svg) => svg.pauseAnimations?.());
 preferences();
 home();
 requestAnimationFrame(frame);
@@ -879,5 +1076,7 @@ fetch("./config.json", { signal: abort.signal, cache: "no-cache" })
   .finally(() => {
     clearTimeout(timeout);
     $("loading").classList.add("done");
-    setTimeout(() => ($("loading").hidden = true), 350);
+    setTimeout(() => ($("loading").hidden = true), 450);
+    // Warm the cache for art that first appears mid-level.
+    for (const src of ["./assets/signal-occluder.webp", "./assets/signal-crayon-texture.webp"]) new Image().src = src;
   });

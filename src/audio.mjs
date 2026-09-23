@@ -39,6 +39,8 @@ export class GameAudio {
       win: [392, 494, 587, 784],
       repair: [262, 330, 392, 523, 659, 784],
       click: [470],
+      star: [1047, 1568],
+      badge: [523, 784, 1047, 1319],
     };
     (tones[name] || tones.click).forEach((f, i) =>
       this.tone(f, i * 0.075, name === "repair" ? 0.6 : 0.18, name === "error" ? 0.04 : 0.03),

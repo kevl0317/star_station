@@ -48,6 +48,46 @@ export function positionOf(s, elapsed, width, height, level) {
     r,
   };
 }
+const HIT_RING = "#95e6b5";
+const CREAM = "#fff6dc";
+// Particles are drawn from cached sprites so bursts stay cheap on phones.
+const sprites = new Map();
+function sprite(kind, color) {
+  const key = kind + color;
+  if (sprites.has(key)) return sprites.get(key);
+  const size = 64,
+    canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const c = canvas.getContext("2d"),
+    m = size / 2;
+  const glow = c.createRadialGradient(m, m, 0, m, m, m);
+  glow.addColorStop(0, color + "aa");
+  glow.addColorStop(0.35, color + "33");
+  glow.addColorStop(1, color + "00");
+  c.fillStyle = glow;
+  c.fillRect(0, 0, size, size);
+  c.fillStyle = color;
+  c.beginPath();
+  if (kind === "sparkle") {
+    const r = m * 0.9,
+      w = r * 0.14;
+    c.moveTo(m, m - r);
+    c.quadraticCurveTo(m + w, m - w, m + r, m);
+    c.quadraticCurveTo(m + w, m + w, m, m + r);
+    c.quadraticCurveTo(m - w, m + w, m - r, m);
+    c.quadraticCurveTo(m - w, m - w, m, m - r);
+  } else {
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5,
+        r = i % 2 ? m * 0.26 : m * 0.62;
+      c.lineTo(m + Math.cos(a) * r, m + Math.sin(a) * r);
+    }
+  }
+  c.closePath();
+  c.fill();
+  sprites.set(key, canvas);
+  return canvas;
+}
 export class WorldRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -60,11 +100,14 @@ export class WorldRenderer {
     this.screen = "home";
     this.level = null;
     this.receiver = null;
-    this.points = Array.from({ length: 65 }, (_, i) => ({
+    this.nextShootingStar = 4;
+    this.points = Array.from({ length: 70 }, (_, i) => ({
       x: ((i * 7919) % 997) / 997,
       y: ((i * 3571) % 991) / 991,
-      size: i % 7 === 0 ? 1.7 : 0.7,
+      size: i % 9 === 0 ? 9 : i % 4 === 0 ? 5 : 2.4,
       phase: i * 1.3,
+      speed: 0.35 + ((i * 37) % 11) / 20,
+      drift: ((i * 13) % 7) - 3,
     }));
     this.resize();
   }
@@ -77,29 +120,76 @@ export class WorldRenderer {
     this.ctx.setTransform(d, 0, 0, d, 0, 0);
   }
   burst(x, y, color, kind = "hit") {
+    const ring = kind === "hit" ? HIT_RING : color;
     if (this.reduced) {
-      this.fx.push({ type: "ring", x, y, color, age: 0, life: 0.3 });
+      this.fx.push({ type: "ring", x, y, color: ring, age: 0, life: 0.3, radius: 34 });
       return;
     }
-    this.fx.push({ type: "ring", x, y, color, age: 0, life: 0.55 });
-    for (let i = 0; i < (kind === "hit" ? 18 : 8); i++) {
-      const a = (i / 18) * Math.PI * 2;
+    // A correct catch locks on with a green ring; mistakes fizzle out softly;
+    // celebrations are rings-free star showers.
+    const big = kind !== "error";
+    if (kind !== "celebrate") this.fx.push({ type: "ring", x, y, color: ring, age: 0, life: 0.55, radius: 46, width: big ? 3 : 2 });
+    if (kind === "hit") this.fx.push({ type: "ring", x, y, color: CREAM, age: -0.08, life: 0.5, radius: 30, width: 1.5 });
+    const count = kind === "celebrate" ? 20 : big ? 14 : 7;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + Math.random() * 0.4,
+        speed = big ? 70 + Math.random() * 110 : 30 + Math.random() * 50;
       this.fx.push({
-        type: "spark",
+        type: "particle",
+        shape: i % 3 === 0 ? "sparkle" : "star",
         x,
         y,
-        color,
-        vx: Math.cos(a) * (30 + Math.random() * 75),
-        vy: Math.sin(a) * (30 + Math.random() * 75),
+        color: i % 4 === 0 ? CREAM : color,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed,
+        spin: (Math.random() - 0.5) * 7,
+        size: big ? 10 + Math.random() * 9 : 7 + Math.random() * 5,
+        gravity: big ? 60 : 20,
         age: 0,
-        life: 0.35 + Math.random() * 0.4,
+        life: 0.45 + Math.random() * 0.35,
       });
     }
     if (kind === "hit") this.fx.push({ type: "beam", x, y, color, age: 0, life: 0.45 });
   }
   celebrate(color) {
-    for (let i = 0; i < 5; i++)
-      this.burst(this.width * (0.2 + i * 0.15), this.height * (0.3 + (i % 2) * 0.2), color);
+    if (this.reduced) return;
+    for (let i = 0; i < 4; i++)
+      this.burst(
+        this.width * (0.14 + i * 0.24 + (Math.random() - 0.5) * 0.08),
+        this.height * (0.22 + Math.random() * 0.3),
+        color,
+        "celebrate",
+      );
+    const palette = [color, "#f6d98a", CREAM, "#9ec5ff", "#f3a6c0"];
+    for (let i = 0; i < 70; i++)
+      this.fx.push({
+        type: "particle",
+        shape: i % 3 ? "star" : "sparkle",
+        x: Math.random() * this.width,
+        y: -20 - Math.random() * this.height * 0.5,
+        color: palette[i % palette.length],
+        vx: (Math.random() - 0.5) * 50,
+        vy: 60 + Math.random() * 90,
+        spin: (Math.random() - 0.5) * 5,
+        size: 10 + Math.random() * 12,
+        gravity: 30,
+        sway: 18 + Math.random() * 20,
+        age: -Math.random() * 1.2,
+        life: 3.2 + Math.random() * 1.6,
+      });
+  }
+  shootingStar() {
+    const w = this.width,
+      h = this.height;
+    this.fx.push({
+      type: "shooting",
+      x: w * (0.35 + Math.random() * 0.6),
+      y: h * (0.05 + Math.random() * 0.25),
+      vx: -(w * 0.35 + 180),
+      vy: h * 0.18 + 60,
+      age: 0,
+      life: 0.95,
+    });
   }
   draw(dt, session) {
     if (session?.state === "paused") dt = 0;
@@ -108,95 +198,158 @@ export class WorldRenderer {
       w = this.width,
       h = this.height;
     c.clearRect(0, 0, w, h);
-    if (!this.reduced)
+    if (!this.reduced) {
+      // Hand-drawn sparkles twinkle and drift slowly across the painting.
+      const game = this.screen === "game";
       for (const p of this.points) {
-        c.globalAlpha = 0.14 + (Math.sin(this.t * 0.5 + p.phase) + 1) * 0.18;
-        c.fillStyle = "#c8f5ff";
-        c.beginPath();
-        c.arc(p.x * w, p.y * h, p.size, 0, Math.PI * 2);
-        c.fill();
+        const twinkle = (Math.sin(this.t * p.speed + p.phase) + 1) / 2;
+        const size = p.size * (0.7 + twinkle * 0.45);
+        const x = (((p.x * w + this.t * p.drift) % w) + w) % w,
+          y = p.y * h;
+        c.globalAlpha = (game ? 0.1 : 0.16) + twinkle * (game ? 0.2 : 0.42);
+        c.drawImage(sprite(p.size > 3 ? "sparkle" : "star", CREAM), x - size, y - size, size * 2, size * 2);
       }
-    c.globalAlpha = 1;
-    if (this.screen === "game") {
-      c.strokeStyle = "#82c8e912";
-      c.lineWidth = 1;
-      if (this.level?.scan) {
-        for (const x of this.level.scan === "three" ? [w / 3, (w * 2) / 3] : [w / 2]) {
-          c.setLineDash([3, 12]);
-          c.beginPath();
-          c.moveTo(x, 100);
-          c.lineTo(x, h - 100);
-          c.stroke();
-          c.setLineDash([]);
+      if (!game && ["home", "result", "chapter", "ending"].includes(this.screen)) {
+        this.nextShootingStar -= dt;
+        if (this.nextShootingStar <= 0) {
+          this.shootingStar();
+          this.nextShootingStar = 6 + Math.random() * 7;
         }
-      }
-      if (this.level?.comets && !this.reduced) {
-        const p = (this.t % 8) / 8;
-        if (p < 0.18) {
-          c.save();
-          c.globalAlpha = (1 - p / 0.18) * 0.5;
-          c.strokeStyle = "#abdaeb";
-          c.beginPath();
-          c.moveTo(w * p * 5, 120 + h * p * 1.2);
-          c.lineTo(w * p * 5 - 95, 120 + h * p * 1.2 - 26);
-          c.stroke();
-          c.restore();
-        }
-      }
-      if (this.level?.shimmer && !this.reduced) {
-        c.globalAlpha = (Math.sin(this.t * 1.2) + 1) * 0.015;
-        c.fillStyle = "#b5cfee";
-        c.fillRect(0, 0, w, h);
-        c.globalAlpha = 1;
       }
     }
+    c.globalAlpha = 1;
+    if (this.screen === "game") this.drawLevelAmbience(c, w, h);
     this.fx = this.fx.filter((f) => f.age < f.life);
     for (const f of this.fx) {
       f.age += dt;
+      if (f.age < 0) continue;
       const p = f.age / f.life;
       c.save();
       c.globalAlpha = Math.max(0, 1 - p);
-      c.fillStyle = f.color;
-      c.strokeStyle = f.color;
-      c.shadowColor = f.color;
-      c.shadowBlur = 10;
       if (f.type === "ring") {
-        c.lineWidth = 2;
+        c.strokeStyle = f.color;
+        c.lineWidth = (f.width || 2) * (1 - p * 0.6);
+        c.shadowColor = f.color;
+        c.shadowBlur = 12;
         c.beginPath();
-        c.arc(f.x, f.y, 12 + p * 45, 0, Math.PI * 2);
+        c.arc(f.x, f.y, 10 + (1 - Math.pow(1 - p, 3)) * (f.radius || 45), 0, Math.PI * 2);
         c.stroke();
-      }
-      if (f.type === "spark") {
-        c.fillRect(f.x + f.vx * f.age, f.y + f.vy * f.age, 3 * (1 - p) + 1, 3 * (1 - p) + 1);
-      }
-      if (f.type === "beam" && this.screen === "game" && this.receiver) {
-        const curve = receiverCurve(this.receiver, f);
-        if (curve) {
-          const { edge, control } = curve;
-          const gradient = c.createLinearGradient(edge.x, edge.y, f.x, f.y);
-          gradient.addColorStop(0, "#c5f4ff");
-          gradient.addColorStop(1, f.color);
-          c.strokeStyle = gradient;
-          c.lineWidth = 1.5;
-          c.beginPath();
-          c.moveTo(edge.x, edge.y);
-          c.quadraticCurveTo(control.x, control.y, f.x, f.y);
-          c.stroke();
-          c.fillStyle = "#e4fbff";
-          c.beginPath();
-          const t = Math.min(1, p),
-            u = 1 - t;
-          c.arc(
-            u * u * f.x + 2 * u * t * control.x + t * t * edge.x,
-            u * u * f.y + 2 * u * t * control.y + t * t * edge.y,
-            2.4,
-            0,
-            Math.PI * 2,
-          );
-          c.fill();
-        }
+      } else if (f.type === "particle") {
+        const t = f.age;
+        const x = f.x + f.vx * t * (1 - p * 0.35) + (f.sway ? Math.sin(t * 2.4 + f.size) * f.sway : 0);
+        const y = f.y + f.vy * t * (1 - p * 0.35) + 0.5 * f.gravity * t * t;
+        const size = f.size * (f.sway ? 1 : 1 - p * 0.5);
+        c.globalAlpha = f.sway ? Math.min(1, (1 - p) * 2.2) : Math.max(0, 1 - p * p);
+        c.translate(x, y);
+        c.rotate(f.spin * t);
+        c.drawImage(sprite(f.shape, f.color), -size, -size, size * 2, size * 2);
+      } else if (f.type === "shooting") {
+        const x = f.x + f.vx * f.age,
+          y = f.y + f.vy * f.age;
+        const tail = c.createLinearGradient(x, y, x - f.vx * 0.22, y - f.vy * 0.22);
+        tail.addColorStop(0, "rgba(255,246,220,0.9)");
+        tail.addColorStop(1, "rgba(255,246,220,0)");
+        c.globalAlpha = Math.sin(p * Math.PI);
+        c.strokeStyle = tail;
+        c.lineWidth = 2;
+        c.lineCap = "round";
+        c.beginPath();
+        c.moveTo(x, y);
+        c.lineTo(x - f.vx * 0.22, y - f.vy * 0.22);
+        c.stroke();
+        c.drawImage(sprite("sparkle", CREAM), x - 7, y - 7, 14, 14);
+      } else if (f.type === "pulse") {
+        c.strokeStyle = f.color;
+        c.lineWidth = 3 * (1 - p);
+        c.shadowColor = f.color;
+        c.shadowBlur = 16;
+        c.beginPath();
+        c.arc(f.x, f.y, f.r * (0.55 + p * 0.55), 0, Math.PI * 2);
+        c.stroke();
+      } else if (f.type === "beam" && this.screen === "game" && this.receiver) {
+        this.drawBeam(c, f, p);
       }
       c.restore();
+    }
+  }
+  drawBeam(c, f, p) {
+    const curve = receiverCurve(this.receiver, f);
+    if (!curve) return;
+    const { edge, control } = curve;
+    const gradient = c.createLinearGradient(edge.x, edge.y, f.x, f.y);
+    gradient.addColorStop(0, "#c5f4ff");
+    gradient.addColorStop(1, f.color);
+    c.strokeStyle = gradient;
+    c.lineWidth = 2;
+    c.lineCap = "round";
+    c.shadowColor = f.color;
+    c.shadowBlur = 8;
+    c.beginPath();
+    c.moveTo(edge.x, edge.y);
+    c.quadraticCurveTo(control.x, control.y, f.x, f.y);
+    c.stroke();
+    // The light packet travels from the signal to the receiver edge.
+    const point = (t) => {
+      const u = 1 - t;
+      return [u * u * f.x + 2 * u * t * control.x + t * t * edge.x, u * u * f.y + 2 * u * t * control.y + t * t * edge.y];
+    };
+    c.globalAlpha = 1;
+    for (let i = 4; i >= 0; i--) {
+      const t = Math.max(0, Math.min(1, p * 1.15 - i * 0.05));
+      const [x, y] = point(t);
+      const size = 9 - i * 1.4;
+      c.globalAlpha = (1 - i / 5) * (1 - Math.max(0, p - 0.85) / 0.15);
+      c.drawImage(sprite("sparkle", CREAM), x - size, y - size, size * 2, size * 2);
+    }
+    if (p >= 0.85 && !f.arrived) {
+      f.arrived = true;
+      this.fx.push({ type: "pulse", x: this.receiver.x, y: this.receiver.y, r: this.receiver.r, color: HIT_RING, age: 0, life: 0.5 });
+    }
+  }
+  drawLevelAmbience(c, w, h) {
+    const level = this.level;
+    if (!level) return;
+    if (level.scan) {
+      // Soft dividers show the scanning zones without touching the signals.
+      const lines = level.scan === "three" ? [w / 3, (w * 2) / 3] : [w / 2];
+      c.save();
+      c.strokeStyle = "rgba(214, 222, 255, 0.2)";
+      c.lineWidth = 1.5;
+      c.setLineDash([2, 10]);
+      c.lineCap = "round";
+      for (const x of lines) {
+        c.beginPath();
+        c.moveTo(x, 110);
+        c.lineTo(x, h - 120);
+        c.stroke();
+      }
+      c.restore();
+    }
+    if (level.comets && !this.reduced) {
+      const p = (this.t % 8) / 8;
+      if (p < 0.2) {
+        const x = w * p * 5,
+          y = 120 + h * p * 1.2;
+        const tail = c.createLinearGradient(x, y, x - 140, y - 38);
+        tail.addColorStop(0, "rgba(200,230,255,0.55)");
+        tail.addColorStop(1, "rgba(200,230,255,0)");
+        c.save();
+        c.globalAlpha = 1 - p / 0.2;
+        c.strokeStyle = tail;
+        c.lineWidth = 2;
+        c.lineCap = "round";
+        c.beginPath();
+        c.moveTo(x, y);
+        c.lineTo(x - 140, y - 38);
+        c.stroke();
+        c.restore();
+      }
+    }
+    if (level.shimmer && !this.reduced) {
+      c.globalAlpha = (Math.sin(this.t * 1.2) + 1) * 0.015;
+      c.fillStyle = "#b5cfee";
+      c.fillRect(0, 0, w, h);
+      c.globalAlpha = 1;
     }
   }
 }

@@ -75,8 +75,8 @@
     },
     {
       "id": "bunny",
-      "activeAsset": "bunny-white-moon.png",
-      "description": "当前白兔立绘，月牙项链；编辑说明见 ART.md"
+      "activeAsset": "bunny-white-moon.webp",
+      "description": "当前白兔立绘，月牙项链；由 1145 × 1374 透明 PNG 缩放为 640 宽 WebP（PNG 原件见 Git 历史），编辑说明见 ART.md"
     }
   ]
 }

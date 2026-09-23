@@ -1,5 +1,6 @@
 import { LEVELS, matches, seeded, signalPool, similarity } from "./levels.mjs";
 export { LEVELS, COLORS, COLOR_NAMES, SHAPE_NAMES, ruleText, matches, seeded } from "./levels.mjs";
+const OCCLUSION_DURATION = 0.8;
 export function sequence(targets, distractors, random, drought = false) {
   const result = [],
     memo = new Map();
@@ -116,19 +117,19 @@ export function makeSchedule(level, seed = Date.now()) {
               : 2
             : 1,
       phase: random() * Math.PI * 2,
-      occluded: !!level.occlusion && slot.life >= 1.95 && random() < 0.22,
+      occluded: !!level.occlusion && slot.life >= OCCLUSION_DURATION + 1.4 && random() < 0.22,
       occlusionStart: null,
     };
     if (signal.occluded) {
       // Leave at least 0.7 seconds clear before and after the occlusion.
-      signal.occlusionStart = 0.7 + random() * (slot.life - 0.55 - 1.4);
+      signal.occlusionStart = 0.7 + random() * (slot.life - OCCLUSION_DURATION - 1.4);
     }
     return signal;
   });
 }
 export function isHidden(s, t) {
   const age = t - s.at;
-  return s.occluded && age >= s.occlusionStart && age < s.occlusionStart + 0.55;
+  return s.occluded && age >= s.occlusionStart && age < s.occlusionStart + OCCLUSION_DURATION;
 }
 export function progressAt(s, t) {
   return Math.max(0, Math.min(1, (t - s.at) / s.life));

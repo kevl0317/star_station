@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="theme-color" content="#071320" />
+    <meta name="theme-color" content="#0d1640" />
     <title>星际信号站 · 太阳系观测网</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath fill='%238bd9ed' d='M20 2L25 15L39 20L25 25L20 38L15 25L1 20L15 15Z'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='24' cy='24' r='24' fill='%2315205c'/%3E%3Cpath d='M18.86 9.14A17 17 0 1 0 37.07 31.55A14.5 14.5 0 0 1 18.86 9.14Z' fill='%23f6d98a'/%3E%3Cpath d='M35.5 4Q36.78 10.72 43.5 12Q36.78 13.28 35.5 20Q34.22 13.28 27.5 12Q34.22 10.72 35.5 4Z' fill='%23fff6dc'/%3E%3Cpath d='M41 23.6Q41.544 26.456 44.4 27Q41.544 27.544 41 30.4Q40.456 27.544 37.6 27Q40.456 26.456 41 23.6Z' fill='%23fff6dc' opacity='.85'/%3E%3C/svg%3E"
     />
-    <link rel="preload" as="image" href="./assets/galaxy-pastel.png" />
-    <link rel="preload" as="image" href="./assets/signal-occluder.webp" />
-    <link rel="stylesheet" href="./src/style.css" />
-    <link rel="stylesheet" href="./src/solar.css" />
-    <link rel="stylesheet" href="./src/observatory.css" />
+    <link rel="preload" as="image" href="./assets/galaxy-pastel.webp" />
+    <link rel="stylesheet" href="./src/theme.css" />
+    <link rel="stylesheet" href="./src/cards.css" />
+    <link rel="stylesheet" href="./src/screens.css" />
+    <link rel="stylesheet" href="./src/motion.css" />
     <script type="module" src="./src/app.mjs"></script>
   </head>
   <body>
@@ -22,14 +22,15 @@
       <div class="space-vignette" aria-hidden="true"></div>
       <canvas id="world-fx" aria-hidden="true"></canvas>
       <div class="loading" id="loading">
-        <span class="loading-star">✦</span><span>星际信号站</span><i></i>
+        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><path d="M18.86 9.14A17 17 0 1 0 37.07 31.55A14.5 14.5 0 0 1 18.86 9.14Z" fill="#f6d98a"/><path d="M35.5 4Q36.78 10.72 43.5 12Q36.78 13.28 35.5 20Q34.22 13.28 27.5 12Q34.22 10.72 35.5 4Z" fill="#fff6dc"/><path d="M41 23.6Q41.544 26.456 44.4 27Q41.544 27.544 41 30.4Q40.456 27.544 37.6 27Q40.456 26.456 41 23.6Z" fill="#fff6dc" opacity=".85"/></svg>
+        <strong>星际信号站</strong><i></i>
       </div>
       <header class="global-hud">
         <button id="brand-home" class="brand" aria-label="返回首页">
-          <span>✦</span> 星际信号站
+          <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><path d="M18.86 9.14A17 17 0 1 0 37.07 31.55A14.5 14.5 0 0 1 18.86 9.14Z" fill="#f6d98a"/><path d="M35.5 4Q36.78 10.72 43.5 12Q36.78 13.28 35.5 20Q34.22 13.28 27.5 12Q34.22 10.72 35.5 4Z" fill="#fff6dc"/><path d="M41 23.6Q41.544 26.456 44.4 27Q41.544 27.544 41 30.4Q40.456 27.544 37.6 27Q40.456 26.456 41 23.6Z" fill="#fff6dc" opacity=".85"/></svg><span>星际信号站</span>
         </button>
         <div class="top-actions">
-          <span id="star-total" class="star-total">★ 0 <small>/ 75</small></span
+          <span id="star-total" class="star-total" role="img"></span
           ><button id="sound" class="icon-button" aria-label="关闭声音"></button
           ><button id="fullscreen" class="icon-button" aria-label="全屏"></button
           ><button id="settings" class="icon-button" aria-label="设置"></button>
@@ -38,51 +39,58 @@
 
       <section class="screen home-screen" id="home-screen" aria-label="游戏首页">
         <div class="home-hero">
-        <div class="hero-copy">
-          <h1>接收信号，<span>点亮星空。</span></h1>
-          <div class="hero-actions">
-            <button id="continue" class="action-button gold">
-              <span id="continue-label">开始旅程</span><b>➜</b>
-            </button>
-            <button class="action-button outline" data-action="atlas">
-              星图图鉴 <span>▤</span>
-            </button>
-            <button class="text-button" data-action="help">怎么玩 <span aria-hidden="true">?</span></button>
+          <div class="hero-copy">
+            <h1>接收信号，<span>点亮星空。</span></h1>
+            <div class="hero-actions">
+              <button id="continue" class="action-button gold">
+                <span id="continue-label">开始旅程</span><b class="button-icon" data-icon="play"></b>
+              </button>
+              <button class="action-button outline" data-action="atlas">
+                <span>星图图鉴</span><b class="button-icon" data-icon="book"></b>
+              </button>
+              <button class="text-button" data-action="help"><span data-icon="help"></span>怎么玩</button>
+            </div>
           </div>
-        </div>
-        <div class="observatory-scene">
-          <div class="scene-orbit" aria-hidden="true"></div>
-          <div id="hero-planet" class="hero-planet"></div>
-          <div class="scene-caption"><span id="hero-body-name"></span></div>
-          <button type="button" class="companion" id="home-companion" aria-label="和小兔打招呼" title="点一点，和小兔打招呼"></button>
-        </div>
+          <div class="observatory-scene">
+            <div class="scene-porthole">
+              <div class="scene-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <svg class="scene-orbit back" viewBox="0 0 400 400" aria-hidden="true"><defs><clipPath id="orbit-back"><rect x="0" y="0" width="400" height="200" /></clipPath></defs><g transform="rotate(-14 200 200)"><g clip-path="url(#orbit-back)"><ellipse cx="200" cy="200" rx="176" ry="54" /><g class="orbit-probe"><circle r="11" opacity=".22" /><circle r="4.6" /><animateMotion dur="16s" repeatCount="indefinite" path="M376 200A176 54 0 1 1 24 200A176 54 0 1 1 376 200" /></g></g></g></svg>
+              <div id="hero-planet" class="hero-planet"></div>
+              <svg class="scene-orbit front" viewBox="0 0 400 400" aria-hidden="true"><defs><clipPath id="orbit-front"><rect x="0" y="200" width="400" height="200" /></clipPath></defs><g transform="rotate(-14 200 200)"><g clip-path="url(#orbit-front)"><ellipse cx="200" cy="200" rx="176" ry="54" /><g class="orbit-probe"><circle r="11" opacity=".22" /><circle r="4.6" /><animateMotion dur="16s" repeatCount="indefinite" path="M376 200A176 54 0 1 1 24 200A176 54 0 1 1 376 200" /></g></g></g></svg>
+              <div class="scene-caption">
+                <small>本次观测</small><span id="hero-body-name"></span><em id="hero-mission"></em>
+              </div>
+              <button type="button" class="companion" id="home-companion" aria-label="和小兔打招呼" title="点一点，和小兔打招呼"></button>
+              <p class="companion-bubble" id="companion-bubble" aria-live="polite"></p>
+            </div>
+          </div>
         </div>
         <div class="home-solar" id="home-solar"></div>
         <div class="home-bottom">
-          <div id="home-towers" class="home-towers"></div>
-          <button id="records" class="text-button">航行记录 ↗</button>
+          <div id="home-towers" class="home-badges"></div>
+          <button id="records" class="text-button"><span data-icon="records"></span>航行记录</button>
         </div>
       </section>
 
       <section class="screen atlas-screen" id="atlas-screen" hidden aria-label="星图图鉴">
         <div class="screen-title">
-          <button class="icon-button" data-action="home" aria-label="返回首页">←</button>
+          <button class="icon-button" data-action="home" aria-label="返回首页"><span data-icon="back"></span></button>
           <div>
             <span class="overline">观测档案</span>
             <h2>星图图鉴</h2>
           </div>
-          <div id="atlas-count"></div>
+          <div id="atlas-count" class="atlas-count"></div>
         </div>
-        <div id="atlas-solar"></div>
+        <div id="atlas-solar" class="atlas-solar"></div>
         <div id="atlas-filters" class="atlas-filters"></div>
         <div id="atlas-cards" class="atlas-cards"></div>
       </section>
 
       <section class="screen briefing-screen" id="briefing-screen" hidden aria-label="关前规则">
-        <button class="back-button" data-action="home">← 返回主页</button>
+        <button class="back-button" data-action="home"><span data-icon="back"></span>返回主页</button>
         <div class="briefing-layout">
           <div class="briefing-art">
-            <div id="briefing-tower"></div>
+            <div class="briefing-porthole"><div id="briefing-tower"></div></div>
             <div id="briefing-chapter" class="chapter-ribbon"></div>
           </div>
           <div class="briefing-content">
@@ -91,7 +99,7 @@
             <div class="rule-heading" id="briefing-rule"></div>
             <div id="examples" class="examples"></div>
             <p id="practice-hint" class="practice-hint" role="status"></p>
-            <button id="ready" class="action-button gold">我会了 <b>➜</b></button>
+            <button id="ready" class="action-button gold">我会了</button>
             <details id="briefing-details" class="rule-details">
               <summary>规则详情</summary>
               <p id="briefing-demo"></p>
@@ -107,14 +115,16 @@
             <span id="play-level"></span><strong id="play-name"></strong>
           </div>
           <div class="active-rule" id="active-rule"></div>
-          <div class="timer-wrap">
-            <svg viewBox="0 0 64 64" aria-hidden="true">
-              <circle cx="32" cy="32" r="28" class="timer-track" />
-              <circle cx="32" cy="32" r="28" id="timer-ring" /></svg
-            ><strong id="timer">60</strong>
+          <div class="hud-actions">
+            <div class="timer-wrap">
+              <svg viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="32" r="28" class="timer-track" />
+                <circle cx="32" cy="32" r="28" id="timer-ring" /></svg
+              ><strong id="timer">60</strong>
+            </div>
+            <button id="pause" class="icon-button" aria-label="暂停游戏"></button>
+            <button class="icon-button" data-action="rules" aria-label="重看规则"><span data-icon="help"></span></button>
           </div>
-          <button id="pause" class="icon-button" aria-label="暂停游戏"></button>
-          <button class="icon-button" data-action="rules" aria-label="重看规则">?</button>
         </div>
         <div class="battle-ship" id="battle-ship">
           <img src="./assets/rescue-ship.webp" alt="" />
@@ -123,16 +133,18 @@
         <div id="environment-clouds" class="environment-clouds" hidden aria-hidden="true"></div>
         <div id="signals" class="signals"></div>
         <div id="judgment" class="judgment" role="status"></div>
-        <div id="combo" class="combo"></div>
         <div class="play-bottom">
           <div class="chapter-repair">
             <div id="play-tower"></div>
-            <div>
+            <div class="repair-copy">
               <span id="play-tower-name"></span>
               <div class="repair-segments" id="repair-segments"></div>
             </div>
           </div>
-          <div class="live-count"><span>接收</span><strong id="hits">0</strong></div>
+          <div class="play-bottom-right">
+            <div id="combo" class="combo"></div>
+            <div class="live-count"><span>接收</span><strong id="hits">0</strong></div>
+          </div>
         </div>
         <div id="countdown" class="countdown" hidden>
           <strong>3</strong><span id="countdown-rule"></span>
@@ -141,44 +153,47 @@
 
       <section class="screen result-screen" id="result-screen" hidden aria-label="本关结算">
         <div class="result-content">
-          <span id="result-kicker" class="overline"></span>
-          <div id="result-stars" class="result-stars"></div>
-          <h2 id="result-title"></h2>
-          <div class="score-medallion">
-            <svg viewBox="0 0 180 180" aria-hidden="true">
-              <circle cx="90" cy="90" r="78" />
-              <circle cx="90" cy="90" r="78" id="score-ring" /></svg
-            ><strong id="result-score">0</strong><span>信号清晰度</span>
-          </div>
-          <details id="result-details" class="rule-details result-details">
-            <summary>成绩详情</summary>
-            <div class="result-metrics">
-            <div>
-              <span>目标接收率</span><strong id="result-hit"></strong>
+          <div class="result-summary">
+            <span id="result-kicker" class="overline"></span>
+            <div id="result-stars" class="result-stars"></div>
+            <h2 id="result-title"></h2>
+            <div class="score-medallion">
+              <svg viewBox="0 0 180 180" aria-hidden="true">
+                <circle cx="90" cy="90" r="78" />
+                <circle cx="90" cy="90" r="78" id="score-ring" /></svg
+              ><div id="result-observation" class="result-observation"></div>
             </div>
-            <div>
-              <span>干扰识别率</span><strong id="result-reject"></strong>
-            </div>
-            </div>
-          </details>
-          <div class="result-buttons">
-            <button class="action-button outline" data-action="home">返回主页</button
-            ><button class="action-button outline" data-action="retry">重试</button
-            ><button id="next" class="action-button gold">继续 <b>➜</b></button>
+            <div class="score-readout"><strong id="result-score">0</strong><span>信号清晰度</span></div>
+            <details id="result-details" class="rule-details result-details">
+              <summary>成绩详情</summary>
+              <div class="result-metrics">
+                <div><span>目标接收率</span><strong id="result-hit"></strong></div>
+                <div><span>干扰识别率</span><strong id="result-reject"></strong></div>
+              </div>
+            </details>
           </div>
           <div id="result-card"></div>
+          <div class="result-buttons">
+            <button class="action-button outline" data-action="home">返回主页<b data-icon="home"></b></button
+            ><button class="action-button outline" data-action="retry">重试<b data-icon="replay"></b></button
+            ><button id="next" class="action-button gold">继续</button>
+          </div>
         </div>
       </section>
 
       <section class="screen chapter-screen" id="chapter-screen" hidden aria-label="章节修复">
         <div class="chapter-cinematic">
           <span id="chapter-repaired" class="overline"></span>
-          <div id="chapter-art" class="chapter-art"></div>
-          <div id="chapter-network" class="chapter-network"></div>
+          <div class="chapter-stage">
+            <div class="chapter-rays" aria-hidden="true"></div>
+            <div id="chapter-art" class="chapter-art"></div>
+            <div id="chapter-medal" class="chapter-medal" aria-hidden="true"></div>
+          </div>
           <h2 id="chapter-title"></h2>
           <p id="chapter-line"></p>
           <div id="chapter-badge" class="earned-badge"></div>
-          <button id="chapter-next" class="action-button gold">继续旅程 <b>➜</b></button>
+          <div id="chapter-network" class="chapter-network"></div>
+          <button id="chapter-next" class="action-button gold">继续旅程</button>
           <div class="chapter-options">
             <button class="text-button" data-action="chapter-card">重看知识</button
             ><button class="text-button" data-action="home">返回首页</button>

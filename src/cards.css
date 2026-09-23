@@ -1,0 +1,649 @@
+/* ==========================================================================
+   知识卡、天体星图与照片查看（首页、图鉴、结算与预览页共用）
+   ========================================================================== */
+
+/* 太阳系星图 ------------------------------------------------------------- */
+.solar-system {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding: 22px 20px 20px;
+}
+.solar-system::before {
+  /* 一条穿过各行星的轨道弧线 */
+  content: "";
+  position: absolute;
+  left: 7%;
+  right: -30%;
+  top: 38px;
+  height: 180px;
+  border-top: 1.5px dashed rgba(246, 217, 138, 0.22);
+  border-radius: 50% 50% 0 0 / 60px 60px 0 0;
+  pointer-events: none;
+}
+.sun-column {
+  width: 11%;
+  flex-shrink: 0;
+}
+.planet-track {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  flex: 1;
+  gap: 4px;
+}
+.planet-stop {
+  position: relative;
+  text-align: center;
+}
+.solar-body {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 6px 2px 8px;
+  border-radius: var(--r-md);
+  text-align: center;
+  transition:
+    background var(--t-fast),
+    transform var(--t-med) var(--ease-out);
+}
+.solar-body:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-3px);
+}
+.solar-body svg {
+  width: 100%;
+  height: auto;
+  min-height: 45px;
+  opacity: 0.62;
+  filter: saturate(0.55) brightness(0.85);
+  transition:
+    opacity var(--t-med),
+    filter var(--t-med);
+}
+.solar-body.lit svg {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(246, 217, 138, 0.38));
+}
+.solar-body > span {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(3, 6, 28, 0.9);
+}
+.solar-body > small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+.solar-body.lit > span::after {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 3px;
+  vertical-align: 1px;
+  background: var(--moon);
+  -webkit-mask: var(--sparkle) center / contain no-repeat;
+  mask: var(--sparkle) center / contain no-repeat;
+}
+/* 首页星图压缩了真实大小关系，但保持标签对齐 */
+.home-solar .solar-body > svg {
+  transform: scale(var(--body-scale, 1));
+  transform-origin: center;
+}
+.home-solar [data-body="mercury"] { --body-scale: 0.34; }
+.home-solar [data-body="venus"] { --body-scale: 0.52; }
+.home-solar [data-body="earth"] { --body-scale: 0.54; }
+.home-solar [data-body="mars"] { --body-scale: 0.42; }
+.home-solar [data-body="jupiter"] { --body-scale: 0.98; }
+.home-solar [data-body="saturn"] { --body-scale: 0.95; }
+.home-solar [data-body="uranus"] { --body-scale: 0.74; }
+.home-solar [data-body="neptune"] { --body-scale: 0.71; }
+.home-solar [data-body="moon"] { --body-scale: 0.66; }
+.moon-inset {
+  margin-top: 6px;
+}
+.moon-inset .solar-body svg {
+  height: 38px;
+  min-height: 0;
+}
+.moon-inset .solar-body > span {
+  font-size: var(--fs-xs);
+}
+.moon-inset .solar-body > small {
+  font-size: 10px;
+}
+.solar-body .generated-planet {
+  opacity: 0.9;
+  filter: saturate(0.7) brightness(0.9);
+}
+.solar-body.lit .generated-planet {
+  opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(246, 217, 138, 0.4));
+}
+
+/* 天体详情弹窗 ----------------------------------------------------------- */
+.body-detail-art {
+  height: 150px;
+  margin: -4px 0 8px;
+  text-align: center;
+  background: radial-gradient(circle at 50% 50%, rgba(246, 217, 138, 0.14), transparent 62%);
+}
+.body-detail-art > svg {
+  width: 190px;
+  height: 100%;
+}
+.body-detail-art + p {
+  text-align: center;
+  margin: 0 0 14px;
+}
+.body-levels {
+  display: grid;
+  gap: 8px;
+}
+.body-levels > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--r-md);
+  background: rgba(10, 16, 52, 0.4);
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.mini-level {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  font-family: var(--font-num);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  background: var(--night-600);
+  border: 1px solid var(--line);
+}
+.mini-level.passed {
+  color: var(--leaf-ink);
+  background: var(--leaf);
+  border-color: transparent;
+}
+.mini-level:disabled {
+  opacity: 0.45;
+}
+.earth-moon-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.earth-moon-art > svg {
+  width: 85%;
+  height: 100%;
+}
+.earth-moon-art > span {
+  position: absolute;
+  width: 40%;
+  right: 0;
+  bottom: 0;
+}
+.earth-moon-art > span > svg {
+  width: 100%;
+}
+
+/* 知识卡 ----------------------------------------------------------------- */
+.knowledge-card {
+  position: relative;
+  padding: 22px 22px 24px;
+  border-radius: var(--r-lg);
+  background: var(--grain) 0 0 / 360px, var(--paper);
+  border: 1px solid var(--line);
+  box-shadow:
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  text-align: left;
+  color: var(--ink);
+}
+.card-heading {
+  display: grid;
+  gap: 10px;
+}
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.card-kind.explore {
+  color: var(--moon-ink);
+  background: var(--moon);
+  border-color: transparent;
+}
+.card-heading > strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  color: var(--moon-bright);
+}
+.knowledge-card > p {
+  margin: 16px 0 0;
+  font-size: var(--fs-lg);
+  line-height: 1.9;
+  color: var(--ink);
+}
+.card-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 150px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: rgba(8, 12, 42, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.card-figure > svg {
+  max-height: 160px;
+  max-width: 100%;
+}
+.card-figure.photo-figure {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  padding: 10px;
+}
+.card-figure.photo-pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.knowledge-photo {
+  min-width: 0;
+  margin: 0;
+  text-align: center;
+}
+.knowledge-photo .photo-original {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--night-950);
+}
+.knowledge-photo button.photo-original {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  cursor: zoom-in;
+}
+.knowledge-photo button.photo-original::after {
+  /* 放大镜提示：图片可点开大图 */
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff6e2' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='5.5'/%3E%3Cpath d='M15 15l4.5 4.5M10.5 8v5M8 10.5h5'/%3E%3C/svg%3E") center / 20px no-repeat,
+    rgba(11, 18, 54, 0.72);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  opacity: 0.85;
+  transition:
+    opacity var(--t-fast),
+    transform var(--t-fast);
+}
+.knowledge-photo button.photo-original:hover::after {
+  opacity: 1;
+  transform: scale(1.08);
+}
+.knowledge-photo img {
+  display: block;
+  width: 100%;
+  height: clamp(190px, 22vw, 300px);
+  object-fit: contain;
+  transition: transform var(--t-slow) var(--ease-out);
+}
+.knowledge-photo button.photo-original:hover img {
+  transform: scale(1.02);
+}
+.knowledge-photo figcaption {
+  display: grid;
+  gap: 4px;
+  padding: 10px 4px 2px;
+  line-height: 1.5;
+}
+.knowledge-photo figcaption strong {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+.photo-mission {
+  font-size: var(--fs-xs);
+  color: var(--ink-mute);
+}
+.photo-text-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px 14px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: zoom-in;
+}
+.knowledge-photo button:focus-visible,
+.photo-text-button:focus-visible {
+  outline: 3px solid var(--moon);
+  outline-offset: 3px;
+}
+.knowledge-illustration > svg.learning-diagram {
+  width: 100%;
+  max-height: 300px;
+}
+.knowledge-illustration > svg.galaxy-diagram {
+  max-height: 380px;
+}
+.galaxy-credit {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 16px;
+  margin-top: 10px;
+}
+.relay-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.relay-photos .knowledge-photo img {
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
+}
+.relay-figure .knowledge-illustration {
+  min-height: 0;
+  margin-top: 12px;
+}
+.figure-object {
+  flex: 1;
+  min-width: 0;
+  max-width: 160px;
+  text-align: center;
+}
+.figure-object > svg,
+.figure-object > .earth-moon-art {
+  width: 100%;
+  height: 100px;
+}
+.figure-object > span {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.diagram-link {
+  font-size: 26px;
+  color: var(--moon);
+  text-align: center;
+}
+.diagram-link small {
+  display: block;
+  font-size: var(--fs-xs);
+  line-height: 1.8;
+  color: var(--ink-soft);
+}
+.planet-order {
+  display: flex;
+  width: 100%;
+  gap: 2px;
+}
+.planet-order > div {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+.planet-order svg {
+  width: 100%;
+  height: auto;
+  opacity: 0.5;
+}
+.planet-order span {
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--ink-mute);
+}
+.planet-order .highlight svg,
+.planet-order .order-sun svg {
+  opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(246, 217, 138, 0.55));
+}
+.planet-order .highlight span,
+.planet-order .order-sun span {
+  font-weight: 800;
+  color: var(--moon-bright);
+}
+.size-earth {
+  width: 45px;
+}
+.size-earth .figure-object > svg {
+  height: 45px;
+}
+.tilt-diagram {
+  position: relative;
+  width: 200px;
+  text-align: center;
+}
+.tilt-diagram > svg {
+  width: 170px;
+  height: 115px;
+}
+.tilt-diagram > i {
+  position: absolute;
+  top: 55px;
+  left: 10px;
+  width: 180px;
+  border-top: 1.5px dashed var(--moon);
+  transform: rotate(-8deg);
+}
+.tilt-diagram > span {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+/* 星小兔讲解：暖白纸对话框 ---------------------------------------------- */
+.bunny-lesson {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 18px 0 0;
+}
+.bunny-lesson-art {
+  flex: 0 0 clamp(70px, 8.5vw, 104px);
+  filter: drop-shadow(0 8px 12px rgba(3, 6, 28, 0.45));
+}
+.bunny-speech {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 14px;
+  padding: 14px 18px;
+  border-radius: 20px 20px 20px 6px;
+  background: var(--grain) 0 0 / 300px, #fff6e2;
+  color: #26305e;
+  box-shadow: 0 10px 22px -12px rgba(3, 6, 28, 0.8);
+}
+.bunny-speech::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  bottom: 12px;
+  width: 18px;
+  height: 18px;
+  background: #fff6e2;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  border-radius: 0 0 0 4px;
+}
+.bunny-speech > p {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: 1.85;
+  color: #26305e;
+}
+.bunny-art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 未解锁知识卡：背面朝上的收藏卡 ---------------------------------------- */
+.knowledge-card.locked {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 260px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(246, 217, 138, 0.09), transparent 58%),
+    var(--grain) 0 0 / 360px,
+    var(--paper-deep);
+  border-style: dashed;
+  border-color: rgba(214, 222, 255, 0.22);
+  box-shadow: none;
+}
+.knowledge-card.locked > span {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+}
+.knowledge-card.locked > svg {
+  display: block;
+  width: 120px;
+  height: 110px;
+  opacity: 0.28;
+  filter: grayscale(0.6);
+}
+.knowledge-card.locked > svg.galaxy-diagram {
+  width: min(100%, 220px);
+  height: 220px;
+}
+.knowledge-card.locked > strong {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.knowledge-card.locked > p {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--ink-mute);
+}
+.knowledge-card.locked > p svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 大图查看 --------------------------------------------------------------- */
+dialog.photo-viewer {
+  width: min(1100px, 94vw);
+  max-width: 94vw;
+  max-height: 94dvh;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--night-900);
+  color: var(--ink);
+  box-shadow: var(--shadow-lg);
+}
+dialog.photo-viewer::backdrop {
+  background: rgba(4, 7, 26, 0.92);
+}
+.photo-viewer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.photo-viewer-bar button {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
+  background: var(--night-600);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 700;
+}
+.photo-viewer > img {
+  display: block;
+  width: 100%;
+  max-height: calc(94dvh - 100px);
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+@media (max-width: 850px) {
+  .card-heading > strong {
+    font-size: 20px;
+  }
+  .knowledge-card {
+    padding: 18px;
+  }
+  .card-figure {
+    min-height: 120px;
+  }
+  .solar-body > small {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .card-figure.photo-pair,
+  .relay-photos {
+    grid-template-columns: 1fr;
+  }
+  .knowledge-photo img {
+    height: 220px;
+  }
+  .knowledge-card > p,
+  .bunny-speech > p {
+    font-size: var(--fs-md);
+  }
+  .solar-system {
+    gap: 4px;
+    padding: 16px 12px;
+  }
+  .solar-system::before {
+    display: none;
+  }
+  .solar-body > span {
+    font-size: var(--fs-xs);
+  }
+  .solar-body svg {
+    min-height: 26px;
+  }
+  .moon-inset .solar-body svg {
+    height: 26px;
+  }
+}

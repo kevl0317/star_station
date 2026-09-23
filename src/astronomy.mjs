@@ -171,6 +171,6 @@ export function cardHTML(id, { narrated = false } = {}) {
   const explanation = narrated
     ? `<div class="bunny-lesson"><div class="bunny-lesson-art">${bunnySVG}</div><div class="bunny-speech"><p>${c.text}</p></div></div>`
     : `<p>${c.text}</p>`;
-  return `<article class="knowledge-card"><div class="card-heading"><span>${c.code} · ${c.kind}</span><strong>${c.title}</strong></div>${cardFigure(id)}${explanation}</article>`;
+  return `<article class="knowledge-card"><div class="card-heading"><span class="card-tags"><span class="chip card-code">${c.code}</span><span class="chip card-kind ${c.kind === "真实探索" ? "explore" : ""}">${c.kind}</span></span><strong>${c.title}</strong></div>${cardFigure(id)}${explanation}</article>`;
 }
-export const bunnySVG = `<svg class="bunny-art" viewBox="0 0 1145 1374" role="img" aria-label="白兔向导"><image href="./assets/solar-art-v1/bunny-white-moon.png" width="1145" height="1374" preserveAspectRatio="xMidYMid meet"/></svg>`;
+export const bunnySVG = `<svg class="bunny-art" viewBox="0 0 1145 1374" role="img" aria-label="白兔向导"><image href="./assets/solar-art-v1/bunny-white-moon.webp" width="1145" height="1374" preserveAspectRatio="xMidYMid meet"/></svg>`;
