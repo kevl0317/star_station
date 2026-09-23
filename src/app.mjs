@@ -1,4 +1,5 @@
 import { initPhotoViewer } from "./photo-viewer.mjs";
+import { exportProgress, mergeProgress } from "./save-transfer.mjs";
 import { endingHTML, COSMOS_CAPTIONS } from "./ending.mjs";
 import { isHidden } from "./engine.mjs";
 import { CHAPTERS, LEVELS, COLORS, ruleText, examples, mismatch } from "./levels.mjs";
@@ -254,6 +255,7 @@ function home() {
   const finished = LEVELS.every((l) => save.stars[l.id]);
   $("continue-label").textContent = finished ? "重温旅程结尾" : Object.keys(save.stars).length ? "继续旅程" : "开始旅程";
   $("hero-planet").innerHTML = planetSVG(l.body);
+  $("hero-planet").classList.toggle("system", l.body === "solar");
   $("hero-body-name").textContent = bodyInfo(l.body).name;
   $("hero-mission").textContent = finished ? "" : `第 ${String(l.id).padStart(2, "0")} 关 · ${l.name}`;
   $("home-towers").innerHTML =
@@ -282,6 +284,7 @@ function briefing(id) {
   $("briefing-details").open = false;
   $("briefing-demo").textContent = l.demo;
   $("briefing-tower").innerHTML = planetSVG(l.body);
+  $("briefing-tower").classList.toggle("system", l.body === "solar");
   $("briefing-chapter").textContent = c.name;
   $("pass-requirement").textContent =
     `${l.duration} 秒 · 目标接收 ≥ ${pct(l.minHit)} · 干扰识别 ≥ ${pct(1 - l.maxFalse)}`;
@@ -774,6 +777,37 @@ function records() {
     "records",
   );
 }
+function exportSaveFile() {
+  const url = URL.createObjectURL(new Blob([exportProgress(save)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `星际信号站存档-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  $("save-status").textContent = "已导出存档，可在其他浏览器中加载。";
+}
+async function importSaveFile(file) {
+  if (!file) return;
+  try {
+    if (file.size > 100 * 1024) throw new Error("文件过大，请选择星际信号站导出的存档。");
+    const text = await file.text();
+    const nextSave = mergeProgress(save, text);
+    try { localStorage.setItem(storageKey, JSON.stringify(nextSave)); }
+    catch { throw new Error("浏览器未能保存存档，原有进度未修改，请检查存储权限。"); }
+    save = nextSave;
+    home();
+    $("save-status").textContent = `加载成功！已通关 ${save.cards.length} / 25 关，已保留较高星级。`;
+  } catch (error) {
+    $("save-status").textContent = error.message || "加载失败，原有进度未修改。";
+  }
+}
+$("save-file").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  event.target.value = "";
+  void importSaveFile(file);
+});
 function exportRecords() {
   const blob = new Blob(
       [
@@ -874,6 +908,12 @@ function routeAction(action, button) {
       break;
     case "export":
       exportRecords();
+      break;
+    case "export-save":
+      exportSaveFile();
+      break;
+    case "import-save":
+      $("save-file").click();
       break;
     case "skip-ending":
       clearIntro();
@@ -1057,7 +1097,6 @@ document.querySelectorAll("[data-icon]").forEach((el) => (el.innerHTML = icon(el
 $("fullscreen").innerHTML = icon("fullscreen");
 $("settings").innerHTML = icon("settings");
 $("pause").innerHTML = icon("pause");
-if (reducedOS) document.querySelectorAll("svg").forEach((svg) => svg.pauseAnimations?.());
 preferences();
 home();
 requestAnimationFrame(frame);

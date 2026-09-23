@@ -54,9 +54,7 @@
           <div class="observatory-scene">
             <div class="scene-porthole">
               <div class="scene-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-              <svg class="scene-orbit back" viewBox="0 0 400 400" aria-hidden="true"><defs><clipPath id="orbit-back"><rect x="0" y="0" width="400" height="200" /></clipPath></defs><g transform="rotate(-14 200 200)"><g clip-path="url(#orbit-back)"><ellipse cx="200" cy="200" rx="176" ry="54" /><g class="orbit-probe"><circle r="11" opacity=".22" /><circle r="4.6" /><animateMotion dur="16s" repeatCount="indefinite" path="M376 200A176 54 0 1 1 24 200A176 54 0 1 1 376 200" /></g></g></g></svg>
               <div id="hero-planet" class="hero-planet"></div>
-              <svg class="scene-orbit front" viewBox="0 0 400 400" aria-hidden="true"><defs><clipPath id="orbit-front"><rect x="0" y="200" width="400" height="200" /></clipPath></defs><g transform="rotate(-14 200 200)"><g clip-path="url(#orbit-front)"><ellipse cx="200" cy="200" rx="176" ry="54" /><g class="orbit-probe"><circle r="11" opacity=".22" /><circle r="4.6" /><animateMotion dur="16s" repeatCount="indefinite" path="M376 200A176 54 0 1 1 24 200A176 54 0 1 1 376 200" /></g></g></g></svg>
               <div class="scene-caption">
                 <small>本次观测</small><span id="hero-body-name"></span><em id="hero-mission"></em>
               </div>
@@ -70,6 +68,12 @@
           <div id="home-towers" class="home-badges"></div>
           <button id="records" class="text-button"><span data-icon="records"></span>航行记录</button>
         </div>
+        <section class="save-transfer" aria-label="存档传递">
+          <div class="save-transfer-actions"><button class="action-button outline" data-action="export-save">导出存档</button><button class="action-button outline" data-action="import-save">加载存档</button></div>
+          <p>导出存档后，可在其他浏览器加载，保留较高星级和已解锁的知识卡。</p>
+          <p id="save-status" role="status" aria-live="polite"></p>
+          <input type="file" id="save-file" accept=".json,application/json" hidden />
+        </section>
       </section>
 
       <section class="screen atlas-screen" id="atlas-screen" hidden aria-label="星图图鉴">
